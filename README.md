@@ -1,29 +1,27 @@
-# DonCEy-Kong-Jr
-🦍 DonCEy Kong Jr.
-Tarea #4 de Paradigmas de Programación (CE3104)
-Carrera: Ingeniería en Computadores
+# 🦍 DonCEy Kong Jr.
+### Tarea #4 de Paradigmas de Programación (CE3104)  
+**Carrera:** Ingeniería en Computadores  
 
-🎯 Objetivos del Proyecto
-Aplicar los fundamentos del paradigma imperativo mediante el uso de C y del paradigma orientado a objetos con Java.
+---
 
-Diseñar e implementar un juego multijugador inspirado en Donkey Kong Jr. con lógica de servidor y clientes.
+## 🎯 Objetivos del Proyecto
 
-Utilizar sockets para la comunicación entre aplicaciones en C (cliente) y Java (servidor).
+- Aplicar **paradigma imperativo** en C y **orientado a objetos** en Java
+- Implementar juego multijugador inspirado en *Donkey Kong Jr.*
+- Utilizar **sockets** para comunicación cliente-servidor
+- Gestionar entidades del juego mediante **listas** como estructuras de datos
+- Soportar hasta **2 jugadores** y **2 espectadores** por partida
 
-Crear y manipular listas como estructuras de datos para gestionar entidades del juego.
+---
 
-Implementar mecanismos de administración para crear y eliminar elementos del juego (cocodrilos, frutas).
+## 🖥️ Descripción del Sistema
 
-Garantizar la escalabilidad con hasta 2 jugadores y 2 espectadores por partida.
+**DonCEy Kong Jr.** es un juego multijugador donde los jugadores controlan a *Donkey Kong Jr.* para rescatar a su padre, esquivando cocodrilos y recolectando frutas.
 
-🖥️ Descripción del Sistema
-DonCEy Kong Jr. es un juego multijugador donde los jugadores controlan a Donkey Kong Jr., quien debe escalar plataformas y esquivar cocodrilos para rescatar a su padre.
-El sistema se compone de tres módulos principales:
+### Módulos Principales:
 
-Servidor (Java): Gestiona la lógica del juego, incluyendo la creación de cocodrilos (rojos y azules), frutas, y la validación de movimientos y colisiones.
+- **Servidor (Java):** Lógica del juego, creación de cocodrilos (rojos/azules) y frutas
+- **Cliente Jugador (C):** Interfaz gráfica con controles de teclado
+- **Cliente Espectador (C):** Visualización en tiempo real
 
-Cliente Jugador (C): Interfaz gráfica que permite al jugador mover a Donkey Kong Jr. usando el teclado (desplazamiento y salto).
-
-Cliente Espectador (C): Permite observar partidas en tiempo sin interactuar.
-
-La comunicación entre clientes y servidor se realiza mediante sockets, asegurando sincronización en tiempo real.
+**Comunicación:** Sockets entre C y Java para sincronización en red.
