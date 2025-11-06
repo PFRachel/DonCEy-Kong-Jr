@@ -20,7 +20,7 @@
 #include <string.h>
 
 #define PORT 5050
-#define IP "192.168.2.4"
+#define IP "127.0.0.1"
 
 int main() {
     // Inicializar Winsock
