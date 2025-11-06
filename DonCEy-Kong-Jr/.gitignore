@@ -1,0 +1,49 @@
+# -------------------
+# Carpetas de binarios
+# -------------------
+bin/
+target/
+build/
+
+# -------------------
+# Configuraciones de IDE
+# -------------------
+.vscode/
+.idea/
+*.iml
+
+# -------------------
+# Archivos compilados de Java
+# -------------------
+/servidor_java/build/
+*.class
+*.jar
+
+# -------------------
+# Archivos compilados de C
+# -------------------
+/cliente_c/*.o
+/cliente_c/*.exe
+/cliente_c/bin/
+*.out
+
+# -------------------
+# Archivos temporales del sistema
+# -------------------
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# -------------------
+# Archivos de empaquetado / dependencias
+# -------------------
+*.jar
+*.war
+*.ear
+
+# -------------------
+# Archivos de backup
+# -------------------
+*~
