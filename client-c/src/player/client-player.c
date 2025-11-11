@@ -10,16 +10,18 @@
 // ACÁ EJECUTAS EL CODIGO PARA CREAR UN PLAYER
 // ---------------------------------------------------------------
 
-#ifdef _WIN32
 //  Evitar conflictos entre Raylib y Windows
 #define WIN32_LEAN_AND_MEAN
-#define NOGDI       
-#define NOUSER     
-#define NOMINMAX 
+#define NOGDI
+#define NOUSER  
+#define NOMINMAX
 
+#include "../../lib/raylib/include/raylib.h"
+
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
+//#pragma comment(lib, "ws2_32.lib")
 #else
 #error Solo windows
 #endif
@@ -30,134 +32,107 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <fcntl.h>
-#include "../../lib/raylib/include/raylib.h"
-
-// IP y PUERTO para modificar
-#define PORT 5050
-#define IP "192.168.124.8" // localhost
-#define WIDTH 800
-#define HEIGHT 600
-
-// Estructura del jugador
-typedef struct {
-    Vector2 position; //Posicion Inicial
-    int width, height; //Dimensiones del Objeto
-    Color color; 
-    char name[32];
-    int score;
-    bool connected; // Control del estado
-} Player;
+#include "../../headers/player.h"  
+#include "../../headers/constants.h"  
 
 int main() {
     // Inicializar Winsock
-    int res;
     WSADATA w; 
-    res = WSAStartup(MAKEWORD(2,2), &w);
-    if (res){
-        printf("Error: %d\n", res);
+    if (WSAStartup(MAKEWORD(2,2), &w)!= 0){
+        printf("Error: %d\n", WSAGetLastError());
         return 1;
     }
 
-    // Crear socket cliente
-    SOCKET client;
-    client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (client == INVALID_SOCKET){
+    // Conectar al servidor
+    SOCKET serverSocket = conectarServidor(IP, PORT);
+    if (serverSocket == INVALID_SOCKET){
         printf("Error: %d\n", WSAGetLastError());
         WSACleanup();
         return 1;
     }
 
-    // Configurar direccion de IP
-    struct sockaddr_in  serv;
-    memset(&serv, 0, sizeof(serv));
-    serv.sin_family = AF_INET;
-    serv.sin_port = htons(PORT);
-    inet_pton(AF_INET, IP, &serv.sin_addr);
-
-    // Conectar al servidor
-    bool conectado = false;
-    if (connect(client, (struct sockaddr*)&serv, sizeof(serv)) == 0) {
-        conectado = true;
-        printf("[Player] Conectado al servidor %s:%d\n", IP, PORT);
-        
-        // Registrarse como jugador
-        char buf[2048];
-        snprintf(buf, sizeof(buf), "JOIN_PLAYER Player1\n");
-        send(client, buf, (int)strlen(buf), 0);
-    } else {
-        printf("Error al conectar: %d\n", WSAGetLastError());
-    }
+    // Registrar jugador
+    printf("[Player] Conectado al servidor %s:%d\n", IP, PORT);
+    //if (registrarJugador(serverSocket, "Player1") != 0) {
+       // printf("Error registrando jugador\n");
+        //closesocket(serverSocket);
+       // WSACleanup();
+       // return 1;
+    //}
 
 // ============================================================================
-    // 1. Iniciar Ventana
+    // Iniciar Ventana
     InitWindow(WIDTH, HEIGHT, "Donkey Kong Jr - Player");
     SetTargetFPS(60);
-    
-    // 2. (Temporal) Configurar usuario
-    char username[] = "Player1";
 
-    int tick = 0; // tiempo actualizacion de estados
+    // Cargar recursos
+    cargarTexturas();
 
-    // 3. Bucle Principal (interfaz + socket)
+    // Inicializar estado del juego
+    GameState miJuego;
+    inicializarGameState(&miJuego);
+
+    char ultimoMensaje[256] = " Essperando mensaje del servidor...";
+    float deltaTime = 0.0f;
+
+    int tick = 0;
+
+    // Bucle Principal 
     while (!WindowShouldClose()) {
-        // Input del User
+        deltaTime = obtenerDeltaTime();
+        
+        // Tomar el Input del User
         int up = IsKeyDown(KEY_UP);
         int down = IsKeyDown(KEY_DOWN); 
         int left = IsKeyDown(KEY_LEFT);
         int right = IsKeyDown(KEY_RIGHT);
         int jump = IsKeyPressed(KEY_SPACE);
-        
-        // Socket
-        if (conectado) {
-            char buf[256];
-            
-            // Enviar inputs al servidor
-            snprintf(buf, sizeof(buf), "INPUT %d %d %d %d %d\n",
-                     up, down, left, right, jump);
-            send(client, buf, (int)strlen(buf), 0);
+ 
+        // Enviar al servidor los inputs
+        char msg[64];
+        snprintf(msg, sizeof(msg), "INPUT %d %d %d %d %d %d\n",
+            tick, up, down, left, right, jump);
+        send(serverSocket, msg, strlen(msg), 0);
+        tick++;
 
-            // Recibir datos del servidor 
-            fd_set readfds;
-            FD_ZERO(&readfds);
-            FD_SET(client, &readfds);
-            
-            struct timeval timeout = {0, 1000}; // 1ms timeout
-            
-            if (select(0, &readfds, NULL, NULL, &timeout) > 0) {
-                int n = recv(client, buf, sizeof(buf)-1, 0);
-                if (n > 0) { 
-                    buf[n] = 0; 
-                    printf("Servidor: %s", buf); 
-                }
-            }
-            tick++;
-        }  
+        // Recibir estado 
+        char buffer[2048];
+        int bytesRecibidos = recibirMensaje(serverSocket, buffer, sizeof(buffer)-1);
+        
+        // Para saltos y detectar muertes por caida
+        aplicarGravedad(&miJuego.player);
+
+        // AUN NO ES FUNCIONAL
+        actualizarAnimacionJugador(&miJuego.player);
+
+        // PRUEBA PARA MOVER AL MONO, PERO DEBERIA DE ESTAR EN JAVA
+        if (IsKeyDown(KEY_RIGHT)) miJuego.player.position.x += 200 * deltaTime;
+        if (IsKeyDown(KEY_LEFT))  miJuego.player.position.x -= 200 * deltaTime;
+        if (IsKeyDown(KEY_UP))    miJuego.player.position.y -= 200 * deltaTime;
+        if (IsKeyDown(KEY_DOWN))  miJuego.player.position.y += 200 * deltaTime;
 
         // Redenrizar grafico
         // DIBUJAR
         BeginDrawing();
-            // Fondo
-            ClearBackground(SKYBLUE);
-            
-            // Plataforma 
-            DrawRectangle(0, 500, WIDTH, 100, BROWN);
-            
-            // Jugador temporal
-            DrawRectangle(100, 400, 40, 60, RED);
-            
-             // Labels
-            DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);
-            DrawText("JUGADOR:", 50, 120, 25, WHITE);
-            DrawText(username, 200, 120, 25, YELLOW);
-            DrawText("Presiona ESC para salir", 250, 550, 15, LIGHTGRAY);
+        // Fondo
+        DrawTexture(fondoTexture, 0, 0, WHITE);
+        
+        // Renderizar juego 
+        renderizarJuego(&miJuego);
+
+            // Labels
+        DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);
+        DrawText("JUGADOR:", 250, 120, 25, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.score), 50, 180, 20, YELLOW);
         EndDrawing();
+        
     }
 
     // Cerrar socket y limpiar Winsock
+    descargarTexturas();
     CloseWindow();
-    if (conectado) {
-        closesocket(client);
-    }
+    desconectarServidor(serverSocket);
     WSACleanup();
+    
     return 0;
 }

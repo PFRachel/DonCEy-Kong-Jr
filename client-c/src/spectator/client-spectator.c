@@ -10,7 +10,6 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
 #else
 #error Solo Windows
 #endif
@@ -20,7 +19,7 @@
 #include <string.h>
 
 #define PORT 5050
-#define IP "127.0.0.1"
+#define IP "172.18.192.124"
 
 int main() {
     // Inicializar Winsock
