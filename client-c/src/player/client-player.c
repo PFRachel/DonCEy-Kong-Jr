@@ -53,12 +53,29 @@ int main() {
 
     // Registrar jugador
     printf("[Player] Conectado al servidor %s:%d\n", IP, PORT);
-    //if (registrarJugador(serverSocket, "Player1") != 0) {
-       // printf("Error registrando jugador\n");
-        //closesocket(serverSocket);
-       // WSACleanup();
-       // return 1;
-    //}
+    if (registrarJugador(serverSocket, "Player") != 0) {
+       printf("Error registrando jugador\n");
+        closesocket(serverSocket);
+        WSACleanup();
+        return 1;
+    }
+    char ackBuffer[64];
+    int bytes = recv(serverSocket, ackBuffer, sizeof(ackBuffer)-1, 0);
+    if (bytes > 0) {
+        ackBuffer[bytes] = '\0';
+        if (strstr(ackBuffer, "ACK") == NULL) {
+            printf("Error: El servidor no aceptó la conexión.\n");
+            closesocket(serverSocket);
+            WSACleanup();
+            return 1;
+        }
+    } else {
+        printf("Conexión cerrada por el servidor.\n");
+        closesocket(serverSocket);
+        WSACleanup();
+        return 1;
+    }
+    printf("[Player] Registro exitoso. Entrando al juego...\n");
 
 // ============================================================================
     // Iniciar Ventana
@@ -72,7 +89,7 @@ int main() {
     GameState miJuego;
     inicializarGameState(&miJuego);
 
-    char ultimoMensaje[256] = " Essperando mensaje del servidor...";
+    char ultimoMensaje[256] = " Esperando mensaje del servidor...";
     float deltaTime = 0.0f;
 
     int tick = 0;

@@ -14,26 +14,61 @@ package logic;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import net.ClientHandler;
+
 public class GameState {
+    // Límites de jugadores y espectadores según el enunciado
+    private static final int MAX_JUGADORES = 4;
+    private static final int MAX_ESPECTADORES = 4; // 4
+    // Listas ordenadas de conexiones
+    private final List<ClientHandler> jugadores = new ArrayList<>();
+    private final List<ClientHandler> espectadores = new ArrayList<>();
+
+
     // listas «conceptuales»
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
-    private final Map<String, Player> players = new LinkedHashMap<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
     private final DKJr dkjr = new DKJr();
 
     private float velocidadFactor = 1.0f;
     private long tick = 0;
+    // -----------------------
+    // MÉTODOS DE REGISTRO (red)
+    // -----------------------
 
-    // ---- API desde la red ----
-    public void addPlayer(String nick, Object conn) {
-        if (players.size() >= 2) return; // regla de negocio
-        players.put(nick, new Player(nick));
+    /**
+     * Intenta registrar un nuevo jugador.
+     * @return true si se registró, false si ya hay 2 jugadores.
+     */
+    public synchronized boolean addPlayer(String nick, ClientHandler handler) {
+        if (jugadores.size() >= MAX_JUGADORES) {
+            return false;
+        }
+        jugadores.add(handler);
+        System.out.println("[GameState] Jugador añadido: " + nick + " (" + jugadores.size() + "/" + MAX_JUGADORES + ")");
+        return true;
     }
-    public void addSpectator(String nick, Object conn) {/* registrar si deseas*/}
 
-    public void enqueueInput(String line) { inputQueue.add(line); }
+    /**
+     * Intenta registrar un nuevo espectador.
+     * @return true si se registró, false si ya hay 4 espectadores.
+     */
+    public synchronized boolean addSpectator(String nick, ClientHandler handler) {
+        if (espectadores.size() >= MAX_ESPECTADORES) {
+            return false;
+        }
+        espectadores.add(handler);
+        System.out.println("[GameState] Espectador añadido: " + nick + " (" + espectadores.size() + "/" + MAX_ESPECTADORES + ")");
+        return true;
+    }
 
+    public void enqueueInput(String line) {
+        inputQueue.add(line);
+    }
+
+
+    
     public void adminSpawnCroc(String line) {
         // "ADMIN_SPAWN_CROC Azul 3 1.5"
         String[] p = line.split("\\s+");
@@ -96,6 +131,9 @@ public class GameState {
         sb.append("]}");
         return sb.toString();
     }
+    // -----------------------
+    // CLASES DE ENTIDADES (POJO)
+    // -----------------------
 
     // ---- modelos «POJO» mínimos ----
     static class Player { String nick; Player(String n){nick=n;} }
