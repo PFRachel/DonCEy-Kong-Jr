@@ -22,7 +22,7 @@ typedef struct {
     int currentLiana; //Liana actual
     bool bothLiana; //Animacion en dos liana
     bool isJumping; //Animacion de salto
-    bool died; //Animacion de muerto
+    bool isAlived; //Animacion de muerto
     int currentFrame; //Para animacion
     Texture2D texture;
     float velocityY; //Para cuando se caiga de la liana
