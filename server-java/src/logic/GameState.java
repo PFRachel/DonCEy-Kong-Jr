@@ -11,6 +11,10 @@
  */
 package logic;
 
+import domain.DKJr;
+import domain.Player;
+
+import domain.DKJr;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -29,7 +33,6 @@ public class GameState {
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
-    private final DKJr dkjr = new DKJr();
 
     private float velocidadFactor = 1.0f;
     private long tick = 0;
@@ -72,14 +75,20 @@ public class GameState {
     public void adminSpawnCroc(String line) {
         // "ADMIN_SPAWN_CROC Azul 3 1.5"
         String[] p = line.split("\\s+");
-        String tipo = p[1]; int liana = Integer.parseInt(p[2]); float vel = Float.parseFloat(p[3]);
+        String tipo = p[1]; 
+        int liana = Integer.parseInt(p[2]); 
+        float vel = Float.parseFloat(p[3]);
         crocs.add(new Croc(tipo, liana, vel));
     }
+
     public void adminSpawnFruit(String line) {
         String[] p = line.split("\\s+");
-        int liana = Integer.parseInt(p[1]); float altura = Float.parseFloat(p[2]); int puntos = Integer.parseInt(p[3]);
+        int liana = Integer.parseInt(p[1]); 
+        float altura = Float.parseFloat(p[2]); 
+        int puntos = Integer.parseInt(p[3]);
         fruits.add(new Fruit(liana, altura, puntos));
     }
+
     public void adminDeleteFruit(String line) {
         String[] p = line.split("\\s+");
         int liana = Integer.parseInt(p[1]); float altura = Float.parseFloat(p[2]);
@@ -93,14 +102,7 @@ public class GameState {
         // 1) consumir inputs
         String msg;
         while ((msg = inputQueue.poll()) != null) {
-            // INPUT <tick> <up> <down> <left> <right> <jump>
-            String[] p = msg.split("\\s+");
-            int up = Integer.parseInt(p[2]);
-            int down = Integer.parseInt(p[3]);
-            int left = Integer.parseInt(p[4]);
-            int right = Integer.parseInt(p[5]);
-            int jump = Integer.parseInt(p[6]);
-            dkjr.applyInput(up, down, left, right, jump);
+            processInput(msg, dt);
         }
 
         // 2) mover cocodrilos
@@ -113,12 +115,38 @@ public class GameState {
         // if (rescato) { dkjr.vidas++; velocidadFactor *= 1.10f; reiniciarNivel(); }
     }
 
+    private void processInput(String msg, float dt) {
+        try {
+            // Formato: "INPUT <tick> <up> <down> <left> <right> <jump>"
+            String[] p = msg.split("\\s+");
+            if (p.length < 7) return;
+            
+            int up = Integer.parseInt(p[2]);
+            int down = Integer.parseInt(p[3]);
+            int left = Integer.parseInt(p[4]);
+            int right = Integer.parseInt(p[5]);
+            int jump = Integer.parseInt(p[6]);
+
+            if (!players.isEmpty()) {
+                Player firstPlayer = players.values().iterator().next();
+                firstPlayer.getMono().applyInput(up, down, left, right, jump, dt);
+            }
+        } catch (Exception e) {
+            System.err.println("Error procesando input: " + msg);
+            e.printStackTrace();
+        }
+    }
+
     public String toJson() {
         // JSON sencillo a mano (puedes cambiar a una lib luego)
         StringBuilder sb = new StringBuilder();
-        sb.append("{\"tick\":").append(tick)
-          .append(",\"dkjr\":").append(dkjr.toJson())
-          .append(",\"crocodiles\":[");
+        sb.append("{\"tick\":").append(tick);
+        if (!players.isEmpty()) {
+        Player firstPlayer = players.values().iterator().next();
+        sb.append(",\"dkjr\":").append(firstPlayer.getMono().toJson());
+        } else {
+            sb.append(",\"dkjr\":null");
+        }
         for (int i = 0; i < crocs.size(); i++) {
             if (i>0) sb.append(",");
             sb.append(crocs.get(i).toJson());
@@ -136,16 +164,6 @@ public class GameState {
     // -----------------------
 
     // ---- modelos «POJO» mínimos ----
-    static class Player { String nick; Player(String n){nick=n;} }
-    static class DKJr {
-        float x=0, y=0; int vidas=3, puntaje=0;
-        void applyInput(int up,int down,int left,int right,int jump){
-            float v=2.0f;
-            if(up==1) y+=v; if(down==1) y-=v; if(left==1) x-=v; if(right==1) x+=v;
-            if(jump==1) {/* lógicas de salto */}
-        }
-        String toJson(){ return "{\"x\":"+x+",\"y\":"+y+",\"vidas\":"+vidas+",\"puntaje\":"+puntaje+"}"; }
-    }
     static class Croc {
         String tipo; int lianaId; float vel; float altura=0; int dir=1;
         Croc(String t,int l,float v){tipo=t; lianaId=l; vel=v;}

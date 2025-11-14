@@ -116,17 +116,30 @@ int main() {
         char buffer[2048];
         int bytesRecibidos = recibirMensaje(serverSocket, buffer, sizeof(buffer)-1);
         
+        // Procesar mensaje del server
+        if (bytesRecibidos > 0) {
+            printf("[Cliente] JSON recibido: %s\n", buffer);
+            
+            // Buscar coordenadas en el JSON
+            char* x_pos = strstr(buffer, "\"x\":");
+            char* y_pos = strstr(buffer, "\"y\":");
+            
+            // Obtener coords de mensaje y mostrar a la pantalla
+            if (x_pos && y_pos) {
+                float x, y;
+                if (sscanf(x_pos, "\"x\":%f", &x) == 1 && 
+                    sscanf(y_pos, "\"y\":%f", &y) == 1) {
+                    miJuego.player.position.x = x;
+                    miJuego.player.position.y = y;
+                }
+            }
+        }
+
         // Para saltos y detectar muertes por caida
-        aplicarGravedad(&miJuego.player);
+        //aplicarGravedad(&miJuego.player);
 
         // AUN NO ES FUNCIONAL
         actualizarAnimacionJugador(&miJuego.player);
-
-        // PRUEBA PARA MOVER AL MONO, PERO DEBERIA DE ESTAR EN JAVA
-        if (IsKeyDown(KEY_RIGHT)) miJuego.player.position.x += 200 * deltaTime;
-        if (IsKeyDown(KEY_LEFT))  miJuego.player.position.x -= 200 * deltaTime;
-        if (IsKeyDown(KEY_UP))    miJuego.player.position.y -= 200 * deltaTime;
-        if (IsKeyDown(KEY_DOWN))  miJuego.player.position.y += 200 * deltaTime;
 
         // Redenrizar grafico
         // DIBUJAR
@@ -142,9 +155,8 @@ int main() {
         DrawText("JUGADOR:", 250, 120, 25, WHITE);
         DrawText(TextFormat("%d", miJuego.player.score), 50, 180, 20, YELLOW);
         EndDrawing();
-        
     }
-
+        
     // Cerrar socket y limpiar Winsock
     descargarTexturas();
     CloseWindow();

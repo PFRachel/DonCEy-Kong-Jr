@@ -37,6 +37,7 @@ int recibirMensaje(SOCKET sock, char* buffer, int bufferSize);
 int registrarJugador(SOCKET sock, const char* nombre);
 int enviarInputs(SOCKET sock, int up, int down, int left, int right, int jump);
 int respuestaServidor(const char* mensaje, GameState* estado);
+void procesarInputJugador(Player* jugador, GameState* estado, int up, int down, int left, int right, int jump);
 
 // ==================== Inicialización ====================
 void inicializarGameState(GameState* estado);

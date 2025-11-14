@@ -126,8 +126,8 @@ void inicializarGameState(GameState* estado){
     memset(estado, 0, sizeof(GameState));
     
     // Jugador inicial
-    estado->player.position = (Vector2){100, 400};
-    estado->player.width = 40;
+    estado->player.position = (Vector2){0, 0};
+    estado->player.width = 0;
     estado->player.height = 60;
     estado->player.score = 0;
     estado->player.texture = playerTexture;
