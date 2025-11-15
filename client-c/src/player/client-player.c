@@ -39,6 +39,7 @@ int main() {
     // Inicializar Winsock
     WSADATA w; 
     if (WSAStartup(MAKEWORD(2,2), &w)!= 0){
+        
         printf("Error: %d\n", WSAGetLastError());
         return 1;
     }
@@ -90,7 +91,7 @@ int main() {
         int down = IsKeyDown(KEY_DOWN); 
         int left = IsKeyDown(KEY_LEFT);
         int right = IsKeyDown(KEY_RIGHT);
-        int jump = IsKeyPressed(KEY_SPACE);
+        int jump = IsKeyDown(KEY_SPACE);
  
         // Enviar al servidor los inputs
         char msg[64];
@@ -106,24 +107,40 @@ int main() {
         // Procesar mensaje del server
         if (bytesRecibidos > 0) {
             printf("[Cliente] JSON recibido: %s\n", buffer);
-            
+            if (strstr(buffer, "\"dkjr\":null") != NULL) {
+                // No hay datos válidos, NO actualizar nada
+                continue;
+            }
             // Buscar coordenadas en el JSON
-            char* x_pos = strstr(buffer, "\"x\":");
-            char* y_pos = strstr(buffer, "\"y\":");
-            
-            // Obtener coords de mensaje y mostrar a la pantalla
-            if (x_pos && y_pos) {
-                float x, y;
-                if (sscanf(x_pos, "\"x\":%f", &x) == 1 && 
-                    sscanf(y_pos, "\"y\":%f", &y) == 1) {
+            char* jsonStart = strstr(buffer, "{");
+            if (jsonStart) {
+
+                // Parsear X
+                char* x_pos = strstr(jsonStart, "\"x\":");
+                char* y_pos = strstr(jsonStart, "\"y\":");
+
+                if (x_pos && y_pos) {
+                    float x, y;
+                    sscanf(x_pos, "\"x\":%f", &x);
+                    sscanf(y_pos, "\"y\":%f", &y);
+
                     miJuego.player.position.x = x;
                     miJuego.player.position.y = y;
                 }
+
+                // Parsear estado de liana
+                char* liana_pos = strstr(jsonStart, "\"onLiana\":");
+                if (liana_pos) {
+                    miJuego.player.onLiana = strstr(liana_pos, "true") != NULL;
+                }
+
+                // Parsear salto
+                char* jump_pos = strstr(jsonStart, "\"jumping\":");
+                if (jump_pos) {
+                    miJuego.player.isJumping = strstr(jump_pos, "true") != NULL;
+                }
             }
         }
-
-        // Para saltos y detectar muertes por caida
-        //aplicarGravedad(&miJuego.player);
 
         // AUN NO ES FUNCIONAL
         actualizarAnimacionJugador(&miJuego.player);

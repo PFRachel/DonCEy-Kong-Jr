@@ -12,9 +12,8 @@
 package logic;
 
 import domain.DKJr;
+import domain.Liana;
 import domain.Player;
-
-import domain.DKJr;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -22,17 +21,32 @@ public class GameState {
     // listas «conceptuales»
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
+    private final List<Liana> lianas = new ArrayList<>();
     private final Map<String, Player> players = new LinkedHashMap<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
 
     private float velocidadFactor = 1.0f;
     private long tick = 0;
+    public GameState() {
+        // Configuración inicial del mapa (6 lianas)
+        lianas.add(new Liana(0, 30, 260, 650));
+        lianas.add(new Liana(1, 100, 260, 610));
+        lianas.add(new Liana(2, 200, 440, 655));
+        lianas.add(new Liana(3, 280, 250, 500));
+        lianas.add(new Liana(4, 350, 250, 430));
 
+        // AJUSTAR POSICION
+        lianas.add(new Liana(5, 500, 120, 650));
+        lianas.add(new Liana(6, 600, 400, 600));
+        lianas.add(new Liana(7, 700, 50, 400));
+        lianas.add(new Liana(8, 750, 120, 650));
+    
+    }
     // ---- API desde la red ----
     public void addPlayer(String nick, Object conn) {
         if (players.size() >= 2) return; // regla de negocio
         int playerId = players.size() + 1;
-        players.put("Player" + playerId, new Player(playerId));
+        players.put("Player" + playerId, new Player(playerId, lianas));
     }
     public void addSpectator(String nick, Object conn) {/* registrar si deseas*/}
 
@@ -72,7 +86,7 @@ public class GameState {
         }
 
         // 2) mover cocodrilos
-        for (Croc c : crocs) c.update(dt * velocidadFactor);
+        //for (Croc c : crocs) c.update(dt * velocidadFactor);
 
         // 3) colisiones (simplificado)
         // ... detectar y actualizar vidas/puntaje
@@ -113,15 +127,24 @@ public class GameState {
         } else {
             sb.append(",\"dkjr\":null");
         }
-        for (int i = 0; i < crocs.size(); i++) {
-            if (i>0) sb.append(",");
-            sb.append(crocs.get(i).toJson());
+        sb.append(",\"lianas\":[");
+        if (!players.isEmpty()) {
+            Player firstPlayer = players.values().iterator().next();
+            List<Liana> lianas = firstPlayer.getMono().getLianas();
+            for (int i = 0; i < lianas.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(lianas.get(i).toJson());
+            }
         }
-        sb.append("],\"fruits\":[");
-        for (int i = 0; i < fruits.size(); i++) {
-            if (i>0) sb.append(",");
-            sb.append(fruits.get(i).toJson());
-        }
+        //for (int i = 0; i < crocs.size(); i++) {
+          //  if (i>0) sb.append(",");
+            //sb.append(crocs.get(i).toJson());
+        //}
+        //sb.append("],\"fruits\":[");
+        //for (int i = 0; i < fruits.size(); i++) {
+          //  if (i>0) sb.append(",");
+           // sb.append(fruits.get(i).toJson());
+        //}
         sb.append("]}");
         return sb.toString();
     }

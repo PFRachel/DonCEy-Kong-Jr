@@ -126,18 +126,11 @@ void inicializarGameState(GameState* estado){
     memset(estado, 0, sizeof(GameState));
     
     // Jugador inicial
-    estado->player.position = (Vector2){0, 0};
+    estado->player.position = (Vector2){100, 500};
     estado->player.width = 0;
     estado->player.height = 60;
     estado->player.score = 0;
     estado->player.texture = playerTexture;
-
-    // Lianas básicas
-    for (int i = 0; i < MAX_LIANAS; i++) {
-        estado->lianas[i].top = (Vector2){150 + i * 150, 100};
-        estado->lianas[i].bottom = (Vector2){150 + i * 150, 700};
-        estado->lianas[i].id = i;
-    }
 
     estado->gameState = 1; // PLAYING
 }
@@ -145,18 +138,6 @@ void inicializarLianas(Liana lianas[]){}
 void inicializarJugador(Player* jugador){}
 
 // ==================== Actualización ====================
-void aplicarGravedad(Player* jugador){
-    if (!jugador->onLiana) {
-        jugador->velocityY += 0.5f;
-        jugador->position.y += jugador->velocityY;
-        
-        // Limitar caída al piso
-        if (jugador->position.y > 600) {
-            jugador->position.y = 600;
-            jugador->velocityY = 0;
-        }
-    }
-}
 void actualizarAnimacionJugador(Player* jugador){
 }
 
@@ -191,10 +172,6 @@ void descargarTexturas(void) {
 
 // ==================== Renderizado ====================
 void renderizarJuego(const GameState* estado){
-    // Dibujar lianas
-    for (int i = 0; i < MAX_LIANAS; i++){
-        DrawLineV(estado->lianas[i].top, estado->lianas[i].bottom, BROWN);
-    }
     DrawTextureEx(estado->player.texture, estado->player.position, 0.0f, 1.0f, WHITE);
 }
 

@@ -39,7 +39,7 @@ public class ClientHandler implements Runnable {
             String line;
             // ACA EL SERVER RECIBE MENSAJES DEL CLIENTE
             while ((line = in.readLine()) != null) {
-                System.out.println("[Server] Received: " + line);
+                //System.out.println("[Server] Received: " + line);
                 handle(line.trim());
             }
         } catch (IOException e) {
@@ -62,6 +62,9 @@ public class ClientHandler implements Runnable {
         } else if (msg.startsWith("INPUT")) {
             // INPUT <tick> <up> <down> <left> <right> <jump>
             state.enqueueInput(msg);
+            state.update(0.016f);
+            String gameStateJson = state.toJson();
+            send(gameStateJson + "\n");
         } else if (msg.startsWith("ADMIN_SPAWN_CROC")) {
             state.adminSpawnCroc(msg); // validación de permisos pendiente
         } else if (msg.startsWith("ADMIN_SPAWN_FRUIT")) {

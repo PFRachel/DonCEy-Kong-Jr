@@ -45,7 +45,6 @@ void inicializarLianas(Liana lianas[]);
 void inicializarJugador(Player* jugador);
 
 // ==================== Actualización ====================
-void aplicarGravedad(Player* jugador);
 void actualizarAnimacionJugador(Player* jugador);
 
 // ==================== Colisión ====================

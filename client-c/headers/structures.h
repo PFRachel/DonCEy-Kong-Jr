@@ -56,6 +56,7 @@ typedef struct {
 
 // Estructura de lianas
 typedef struct {
+    float x; // Posicion en X
     Vector2 top; //Punto inicial
     Vector2 bottom; //Punto final (para la distancia de la liana)
     int id;
