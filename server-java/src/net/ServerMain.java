@@ -12,8 +12,8 @@
  */
 package net;
 
-import logic.GameState;   
-import logic.GameLoop;
+//import logic.GameState;   
+//import logic.GameLoop;
 
 public class ServerMain {
     public static void main(String[] args) {

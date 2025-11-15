@@ -14,11 +14,19 @@ package logic;
 import domain.DKJr;
 import domain.Player;
 
-import domain.DKJr;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.ClientHandler;
+// -------------------------
+// ABSTRACT FACTORY IMPORTS
+// -------------------------
+import logic.factory.CrocFactory;
+import logic.factory.FruitFactory;
+import logic.factory.GameObject;
+import logic.factory.GameObjectFactory;
+
 
 public class GameState {
     // Límites de jugadores y espectadores según el enunciado
