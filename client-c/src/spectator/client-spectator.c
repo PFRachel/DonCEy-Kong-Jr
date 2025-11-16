@@ -1,4 +1,4 @@
-// ---------------------------------------------------------------
+// --------------------------------------------------------------- 
 // Nombre del archivo: client-spectator
 // Descripción: 
 //      Cliente TCP espectador para juegos LAN/Wi-Fi en Windows
@@ -16,13 +16,12 @@
 //      - Muestra una ventana blanca (futuro: renderiza estado)
 // ---------------------------------------------------------------
 
-
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
 #define NOUSER
 #define NOMINMAX
 
-#include "../lib/raylib/include/raylib.h"
+#include "../../lib/raylib/include/raylib.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -35,6 +34,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// Para renderizar 
+float dkjrX = 200.0f;
+float dkjrY = 300.0f;
+
+Texture2D fondoTexture;
+Texture2D playerTexture;
 
 // -------------------------------
 // CONFIGURACIÓN (ajusta según tu red)
@@ -136,14 +142,45 @@ int main() {
     InitWindow(WIDTH, HEIGHT, "DonCEy Kong Jr - Espectador");
     SetTargetFPS(60);
 
+    // Cargar fondo y sprite del jugador (igual que el cliente jugador)
+    Image fondoImg = LoadImage("client-c/image/Fondo.png");
+    fondoTexture = LoadTextureFromImage(fondoImg);
+    UnloadImage(fondoImg);
+
+    Image playerImg = LoadImage("client-c/image/IPlayer.png");
+    playerTexture = LoadTextureFromImage(playerImg);
+    UnloadImage(playerImg);
+
+    // Debug simple por si fallan las rutas
+    if (fondoTexture.id == 0)  printf("[Spectator] ERROR cargando Fondo.png\n");
+    if (playerTexture.id == 0) printf("[Spectator] ERROR cargando IPlayer.png\n");
+
     char buffer[2048];
 
     // Bucle principal: solo recibe estado
     while (!WindowShouldClose()) {
         int n = recibirMensaje(serverSocket, buffer, sizeof(buffer));
         if (n > 0) {
-            // Opcional: parsear JSON aquí en el futuro
+            buffer[n] = '\0';
             printf("Estado: %s", buffer);
+
+            // TODO: aquí más adelante parsearás el mensaje
+            //       y actualizarás dkjrX, dkjrY según lo que mande el servidor
+            // de momento, podemos dejarlo quieto o moverlo de prueba.
+
+            // Parseo simple del JSON: buscamos "dkjr":{"x":..., "y":...}
+            char* dk = strstr(buffer, "\"dkjr\"");
+            if (dk != NULL) {
+                char* xPtr = strstr(dk, "\"x\":");
+                char* yPtr = strstr(dk, "\"y\":");
+
+                if (xPtr) {
+                    dkjrX = (float)atof(xPtr + 4);  // 4 = strlen("\"x\":")
+                }
+                if (yPtr) {
+                    dkjrY = (float)atof(yPtr + 4);  // 4 = strlen("\"y\":")
+                }
+            }
         } else if (n < 0) {
             printf("[Spectator] Servidor cerró la conexión.\n");
             break;
@@ -151,13 +188,20 @@ int main() {
 
         // Renderizado
         BeginDrawing();
-        ClearBackground(WHITE);
+        ClearBackground(RAYWHITE);
+
+        // DIBUJAR FONDO + JUGADOR
+        DrawTexture(fondoTexture, 0, 0, WHITE);
+        DrawTexture(playerTexture, (int)dkjrX, (int)dkjrY, WHITE);
+
         DrawText("ESPECTADOR - DonCEy Kong Jr", 20, 20, 20, DARKGRAY);
         DrawText("Observando la partida...", 20, 50, 16, GRAY);
         EndDrawing();
     }
 
     // Limpiar
+    UnloadTexture(fondoTexture);
+    UnloadTexture(playerTexture);
     CloseWindow();
     closesocket(serverSocket);
     WSACleanup();

@@ -13,7 +13,7 @@
 
 // Constantes de red
 #define PORT 5050
-#define IP "192.168.100.41"
+#define IP "127.0.0.1"
 #define BUFFER_SIZE 2048
 
 // Constantes del juego

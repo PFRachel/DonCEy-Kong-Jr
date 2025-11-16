@@ -28,12 +28,12 @@ public class GameState {
     private final List<ClientHandler> jugadores = new ArrayList<>();
     private final List<ClientHandler> espectadores = new ArrayList<>();
 
-
+    //Lista de jugadores lógicos
+    private final List<Player> players = new ArrayList<>();
     // listas «conceptuales»
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
-
     private float velocidadFactor = 1.0f;
     private long tick = 0;
     // -----------------------
@@ -49,6 +49,8 @@ public class GameState {
             return false;
         }
         jugadores.add(handler);
+        Player nuevo = new Player(jugadores.size());
+        players.add(nuevo);
         System.out.println("[GameState] Jugador añadido: " + nick + " (" + jugadores.size() + "/" + MAX_JUGADORES + ")");
         return true;
     }
@@ -128,7 +130,7 @@ public class GameState {
             int jump = Integer.parseInt(p[6]);
 
             if (!players.isEmpty()) {
-                Player firstPlayer = players.values().iterator().next();
+                Player firstPlayer = players.get(0);
                 firstPlayer.getMono().applyInput(up, down, left, right, jump, dt);
             }
         } catch (Exception e) {
@@ -142,7 +144,7 @@ public class GameState {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"tick\":").append(tick);
         if (!players.isEmpty()) {
-        Player firstPlayer = players.values().iterator().next();
+        Player firstPlayer = players.get(0);
         sb.append(",\"dkjr\":").append(firstPlayer.getMono().toJson());
         } else {
             sb.append(",\"dkjr\":null");
