@@ -95,8 +95,8 @@ int recibirMensaje(SOCKET sock, char* buffer, int bufferSize){
         
 int registrarJugador(SOCKET sock, const char* nombre){
     char msg[100];
-    snprintf(msg, sizeof(msg), "JOIN:%s", nombre);
-    return enviarMensaje(sock, msg);
+    snprintf(msg, sizeof(msg), "JOIN_PLAYER %s\n", nombre);
+    return send(sock, msg, (int)strlen(msg), 0) <= 0; // devuelve 0 si OK, 1 si error
 }
 
 int enviarInputs(SOCKET sock, int up, int down, int left, int right, int jump){

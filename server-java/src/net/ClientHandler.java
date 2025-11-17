@@ -49,29 +49,35 @@ public class ClientHandler implements Runnable {
             try { socket.close(); } catch (IOException ignored) {}
         }
     }
-
     private void handle(String msg) {
         if (msg.startsWith("JOIN_PLAYER")) {
             String nick = msg.substring("JOIN_PLAYER".length()).trim();
-            state.addPlayer(nick, this);
-            send("ACK\n");
+            if (state.addPlayer(nick, this)) {
+                send("ACK\n");
+            } else {
+                send("ERR max_players\n");
+            }
         } else if (msg.startsWith("JOIN_SPECTATOR")) {
             String nick = msg.substring("JOIN_SPECTATOR".length()).trim();
-            state.addSpectator(nick, this);
-            send("ACK\n");
-        } else if (msg.startsWith("INPUT")) {
+            if (state.addSpectator(nick, this)) {
+                send("ACK\n");
+            } else {
+                send("ERR max_spectators\n");
+            }
             // INPUT <tick> <up> <down> <left> <right> <jump>
+        } else if (msg.startsWith("INPUT")) {
             state.enqueueInput(msg);
             state.update(0.016f);
             String gameStateJson = state.toJson();
             send(gameStateJson + "\n");
         } else if (msg.startsWith("ADMIN_SPAWN_CROC")) {
-            state.adminSpawnCroc(msg); // validación de permisos pendiente
+            state.adminSpawnCroc(msg);// validación de permisos pendiente
         } else if (msg.startsWith("ADMIN_SPAWN_FRUIT")) {
             state.adminSpawnFruit(msg);
         } else if (msg.startsWith("ADMIN_DELETE_FRUIT")) {
             state.adminDeleteFruit(msg);
         } else if (msg.startsWith("LEAVE")) {
+            // opcional: limpieza
             // se maneja en state si quieres
         } else {
             send("ERR unknown\n");

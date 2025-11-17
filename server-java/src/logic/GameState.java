@@ -14,19 +14,46 @@ package logic;
 import domain.DKJr;
 import domain.Liana;
 import domain.Player;
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> AbstractFactory
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import net.ClientHandler;
+// -------------------------
+// ABSTRACT FACTORY IMPORTS
+// -------------------------
+import logic.factory.CrocFactory;
+import logic.factory.FruitFactory;
+import logic.factory.GameObject;
+import logic.factory.GameObjectFactory;
+
+
 public class GameState {
+    // Límites de jugadores y espectadores según el enunciado
+    private static final int MAX_JUGADORES = 4;
+    private static final int MAX_ESPECTADORES = 4; // 4
+    // Listas ordenadas de conexiones
+    private final List<ClientHandler> jugadores = new ArrayList<>();
+    private final List<ClientHandler> espectadores = new ArrayList<>();
+
+
     // listas «conceptuales»
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
+<<<<<<< HEAD
     private final List<Liana> lianas = new ArrayList<>();
     private final Map<String, Player> players = new LinkedHashMap<>();
+=======
+>>>>>>> AbstractFactory
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
 
     private float velocidadFactor = 1.0f;
     private long tick = 0;
+<<<<<<< HEAD
     public GameState() {
         // Configuración inicial del mapa (6 lianas)
         lianas.add(new Liana(0, 30, 260, 650));
@@ -47,11 +74,44 @@ public class GameState {
         if (players.size() >= 2) return; // regla de negocio
         int playerId = players.size() + 1;
         players.put("Player" + playerId, new Player(playerId, lianas));
+=======
+    // -----------------------
+    // MÉTODOS DE REGISTRO (red)
+    // -----------------------
+
+    /**
+     * Intenta registrar un nuevo jugador.
+     * @return true si se registró, false si ya hay 2 jugadores.
+     */
+    public synchronized boolean addPlayer(String nick, ClientHandler handler) {
+        if (jugadores.size() >= MAX_JUGADORES) {
+            return false;
+        }
+        jugadores.add(handler);
+        System.out.println("[GameState] Jugador añadido: " + nick + " (" + jugadores.size() + "/" + MAX_JUGADORES + ")");
+        return true;
+>>>>>>> AbstractFactory
     }
-    public void addSpectator(String nick, Object conn) {/* registrar si deseas*/}
 
-    public void enqueueInput(String line) { inputQueue.add(line); }
+    /**
+     * Intenta registrar un nuevo espectador.
+     * @return true si se registró, false si ya hay 4 espectadores.
+     */
+    public synchronized boolean addSpectator(String nick, ClientHandler handler) {
+        if (espectadores.size() >= MAX_ESPECTADORES) {
+            return false;
+        }
+        espectadores.add(handler);
+        System.out.println("[GameState] Espectador añadido: " + nick + " (" + espectadores.size() + "/" + MAX_ESPECTADORES + ")");
+        return true;
+    }
 
+    public void enqueueInput(String line) {
+        inputQueue.add(line);
+    }
+
+
+    
     public void adminSpawnCroc(String line) {
         // "ADMIN_SPAWN_CROC Azul 3 1.5"
         String[] p = line.split("\\s+");
@@ -148,6 +208,9 @@ public class GameState {
         sb.append("]}");
         return sb.toString();
     }
+    // -----------------------
+    // CLASES DE ENTIDADES (POJO)
+    // -----------------------
 
     // ---- modelos «POJO» mínimos ----
     static class Croc {
