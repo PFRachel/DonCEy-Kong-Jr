@@ -159,10 +159,10 @@ public class GameState {
             int right = Integer.parseInt(p[5]);
             int jump = Integer.parseInt(p[6]);
 
-            if (!players.isEmpty()) {
-                Player firstPlayer = players.get(0);
-                firstPlayer.getMono().applyInput(up, down, left, right, jump, dt);
-            }
+            if (players.isEmpty()) return;
+
+            Player firstPlayer = players.values().iterator().next();
+            firstPlayer.getMono().applyInput(up, down, left, right, jump, dt);
         } catch (Exception e) {
             System.err.println("Error procesando input: " + msg);
             e.printStackTrace();
@@ -174,8 +174,8 @@ public class GameState {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"tick\":").append(tick);
         if (!players.isEmpty()) {
-        Player firstPlayer = players.get(0);
-        sb.append(",\"dkjr\":").append(firstPlayer.getMono().toJson());
+            Player firstPlayer = players.values().iterator().next();
+            sb.append(",\"dkjr\":").append(firstPlayer.getMono().toJson());
         } else {
             sb.append(",\"dkjr\":null");
         }

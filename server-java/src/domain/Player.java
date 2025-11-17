@@ -23,7 +23,7 @@ public class Player {
     private int level = 1;
     private int lives = 3;
 
-    private DKJr personaje; // asociar mono
+    private final DKJr personaje; // asociar mono
 
     public Player(int playerId, List<Liana> lianas ) {
         this.playerId = playerId;
