@@ -14,21 +14,16 @@ package logic;
 import domain.DKJr;
 import domain.Liana;
 import domain.Player;
-<<<<<<< HEAD
-=======
-
-
->>>>>>> AbstractFactory
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.ClientHandler;
+
 // -------------------------
 // ABSTRACT FACTORY IMPORTS
 // -------------------------
 import logic.factory.CrocFactory;
 import logic.factory.FruitFactory;
-import logic.factory.GameObject;
 import logic.factory.GameObjectFactory;
 
 
@@ -44,16 +39,13 @@ public class GameState {
     // listas «conceptuales»
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
-<<<<<<< HEAD
     private final List<Liana> lianas = new ArrayList<>();
     private final Map<String, Player> players = new LinkedHashMap<>();
-=======
->>>>>>> AbstractFactory
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
 
     private float velocidadFactor = 1.0f;
     private long tick = 0;
-<<<<<<< HEAD
+
     public GameState() {
         // Configuración inicial del mapa (6 lianas)
         lianas.add(new Liana(0, 30, 260, 650));
@@ -69,12 +61,7 @@ public class GameState {
         lianas.add(new Liana(8, 750, 120, 650));
     
     }
-    // ---- API desde la red ----
-    public void addPlayer(String nick, Object conn) {
-        if (players.size() >= 2) return; // regla de negocio
-        int playerId = players.size() + 1;
-        players.put("Player" + playerId, new Player(playerId, lianas));
-=======
+
     // -----------------------
     // MÉTODOS DE REGISTRO (red)
     // -----------------------
@@ -88,9 +75,12 @@ public class GameState {
             return false;
         }
         jugadores.add(handler);
+        // Instanciar el Player y añadirlo al mapa
+        
+        int playerId = players.size() + 1;
+        players.put("Player" + playerId, new Player(playerId, lianas));
         System.out.println("[GameState] Jugador añadido: " + nick + " (" + jugadores.size() + "/" + MAX_JUGADORES + ")");
         return true;
->>>>>>> AbstractFactory
     }
 
     /**
