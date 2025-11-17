@@ -10,8 +10,9 @@
  */
 package net;
 
-import logic.GameLoop;
 import logic.GameState;
+import logic.observer.GameStateObserver;
+import logic.observer.ObservableGameLoop;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -26,13 +27,35 @@ public class GameServer {
     private final int port;
     private final CopyOnWriteArrayList<ClientHandler> clients = new CopyOnWriteArrayList<>();
     private final GameState state = new GameState();
-    private GameLoop loop;
+
+    private ObservableGameLoop observableLoop;
 
     public GameServer(int port) { this.port = port; }
 
     public void start() {
-        loop = new GameLoop(state, this::broadcastState);
-        loop.start(); // inicia el bucle a 60 Hz
+
+        // ---------------------------------------------------------------
+        // USO DEL PATRÓN OBSERVER (JAVA → SUBJECT)
+        // ---------------------------------------------------------------
+
+        // Crear el Subject que envuelve el GameLoop lógico del juego
+        observableLoop = new ObservableGameLoop(state);
+
+        // Registrar un Observer que envía el estado JSON a TODOS los clientes
+        observableLoop.addObserver(new GameStateObserver() {
+            @Override
+            public void onStateJson(String stateJson) {
+                // Mismo formato que antes para el spectator y player
+                broadcast("STATE " + stateJson + "\n");
+            }
+        });
+
+        // Iniciar el bucle de juego (60 Hz)
+        observableLoop.start();
+
+        // ---------------------------------------------------------------
+        // SERVIDOR TCP 
+        // ---------------------------------------------------------------
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("[Server] Listening on " + port);
@@ -46,7 +69,9 @@ public class GameServer {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            loop.stop();
+            if (observableLoop != null) {
+                observableLoop.stop();
+            }
         }
     }
 
@@ -54,9 +79,5 @@ public class GameServer {
 
     public void broadcast(String line) {
         for (ClientHandler c : clients) c.send(line);
-    }
-
-    private void broadcastState(String stateJson) {
-        broadcast("STATE " + stateJson + "\n");
     }
 }
