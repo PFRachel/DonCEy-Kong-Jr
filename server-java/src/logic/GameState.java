@@ -25,11 +25,15 @@ import net.ClientHandler;
 import logic.factory.CrocFactory;
 import logic.factory.FruitFactory;
 import logic.factory.GameObjectFactory;
+import domain.entities.GameObject;
 
 
 public class GameState {
+    // Cada cliente recibe solo su pantalla (pantalla1, pantalla2…)
+    private final Map<String, ClientHandler> pantallas = new HashMap<>();
+
     // Límites de jugadores y espectadores según el enunciado
-    private static final int MAX_JUGADORES = 4;
+    private static final int MAX_JUGADORES = 2;
     private static final int MAX_ESPECTADORES = 4; // 4
     // Listas ordenadas de conexiones
     private final List<ClientHandler> jugadores = new ArrayList<>();
@@ -39,8 +43,8 @@ public class GameState {
     private final Map<String, Player> players = new LinkedHashMap<>();
     
     // listas «conceptuales»
-    private final List<Croc> crocs = new ArrayList<>();
-    private final List<Fruit> fruits = new ArrayList<>();
+    private final List<GameObject> objetos = new ArrayList<>();
+
     private final List<Liana> lianas = new ArrayList<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
     private float velocidadFactor = 1.0f;
@@ -65,68 +69,113 @@ public class GameState {
     // -----------------------
     // MÉTODOS DE REGISTRO (red)
     // -----------------------
-
-    /**
-     * Intenta registrar un nuevo jugador.
-     * @return true si se registró, false si ya hay 2 jugadores.
-     */
     public synchronized boolean addPlayer(String nick, ClientHandler handler) {
-        if (jugadores.size() >= MAX_JUGADORES) {
-            return false;
-        }
+
+        if (jugadores.size() >= MAX_JUGADORES) return false;
+
+        String pantalla = "pantalla" + (jugadores.size() + 1);
+        pantallas.put(pantalla, handler);
+
+        handler.setPantallaId(pantalla);
+        handler.setTipo("PLAYER");
+
         jugadores.add(handler);
 
-        // Instanciar el Player y añadirlo al mapa
+        // Crear jugador lógico
         int playerId = players.size() + 1;
-        String key = "Player" + playerId;
+        players.put("Player" + playerId, new Player(playerId, lianas));
 
-        Player newPlayer = new Player(playerId, lianas);
-        players.put(key, newPlayer);
+        System.out.println("[GameState] Jugador " + nick + " asignado a " + pantalla);
         return true;
     }
 
-    /**
-     * Intenta registrar un nuevo espectador.
-     * @return true si se registró, false si ya hay 4 espectadores.
-     */
     public synchronized boolean addSpectator(String nick, ClientHandler handler) {
-        if (espectadores.size() >= MAX_ESPECTADORES) {
-            return false;
-        }
+
+        if (espectadores.size() >= MAX_ESPECTADORES) return false;
+
+        String pantalla = "pantalla" + (espectadores.size() + 1);
+        pantallas.put(pantalla, handler);
+
+        handler.setPantallaId(pantalla);
+        handler.setTipo("SPECTATOR");
+
         espectadores.add(handler);
-        System.out.println("[GameState] Espectador añadido: " + nick + " (" + espectadores.size() + "/" + MAX_ESPECTADORES + ")");
+
+        System.out.println("[GameState] Espectador " + nick + " asignado a " + pantalla);
         return true;
     }
-
-    public void enqueueInput(String line) {
-        inputQueue.add(line);
+    //cola de imputs 
+     public void enqueueInput(String msg) {
+        inputQueue.add(msg);
     }
+    // COMANDOS DEL ADMIN: ABSTRACT FACTORY
+    // ==========================================================
 
+    // Ejemplo: ADMIN_SPAWN_CROC rojo 3 1.5 pantalla2
+    public void adminSpawnCroc(String msg) {
 
-    
-    public void adminSpawnCroc(String line) {
-        // "ADMIN_SPAWN_CROC Azul 3 1.5"
-        String[] p = line.split("\\s+");
-        String tipo = p[1]; 
-        int liana = Integer.parseInt(p[2]); 
+        String[] p = msg.split("\\s+");
+        if (p.length < 5) {
+            System.out.println("[ADMIN] Formato inválido: ADMIN_SPAWN_CROC tipo liana vel pantalla");
+            return;
+        }
+
+        String tipo = p[1];
+        int liana = Integer.parseInt(p[2]);
         float vel = Float.parseFloat(p[3]);
-        crocs.add(new Croc(tipo, liana, vel));
+        String pantalla = p[4];
+
+        GameObjectFactory factory = new CrocFactory();
+        GameObject croc = factory.create(tipo, liana, vel);
+
+        croc.setPantallaObjetivo(pantalla);
+        objetos.add(croc);
+
+        System.out.println("[ADMIN] Cocodrilo creado en " + pantalla);
     }
 
-    public void adminSpawnFruit(String line) {
-        String[] p = line.split("\\s+");
-        int liana = Integer.parseInt(p[1]); 
-        float altura = Float.parseFloat(p[2]); 
+    // Ejemplo: ADMIN_SPAWN_FRUIT 2 70 300 pantalla1
+    public void adminSpawnFruit(String msg) {
+
+        String[] p = msg.split("\\s+");
+        if (p.length < 5) {
+            System.out.println("[ADMIN] Formato inválido: ADMIN_SPAWN_FRUIT liana altura puntos pantalla");
+            return;
+        }
+
+        int liana = Integer.parseInt(p[1]);
+        float altura = Float.parseFloat(p[2]);
         int puntos = Integer.parseInt(p[3]);
-        fruits.add(new Fruit(liana, altura, puntos));
+        String pantalla = p[4];
+
+        GameObjectFactory factory = new FruitFactory();
+        GameObject fruit = factory.create(liana, altura, puntos);
+
+        fruit.setPantallaObjetivo(pantalla);
+        objetos.add(fruit);
+
+        System.out.println("[ADMIN] Fruta creada en " + pantalla);
     }
 
-    public void adminDeleteFruit(String line) {
-        String[] p = line.split("\\s+");
-        int liana = Integer.parseInt(p[1]); float altura = Float.parseFloat(p[2]);
-        fruits.removeIf(f -> f.lianaId == liana && Math.abs(f.altura - altura) < 1e-3);
-    }
+    // Ejemplo: ADMIN_DELETE_FRUIT 2 70 pantalla1
+    public void adminDeleteFruit(String msg) {
 
+        String[] p = msg.split("\\s+");
+        if (p.length < 4) return;
+
+        int liana = Integer.parseInt(p[1]);
+        float altura = Float.parseFloat(p[2]);
+        String pantalla = p[3];
+
+        objetos.removeIf(o ->
+                o.getTipo().equals("FRUTA") &&
+                o.getLiana() == liana &&
+                Math.abs(o.getAltura() - altura) < 1e-3 &&
+                pantalla.equals(o.getPantallaObjetivo())
+        );
+
+        System.out.println("[ADMIN] Fruta eliminada de " + pantalla);
+    }
     // ---- bucle de juego ----
     public void update(float dt) {
         tick++;
@@ -136,6 +185,8 @@ public class GameState {
         while ((msg = inputQueue.poll()) != null) {
             processInput(msg, dt);
         }
+        // 2. Actualizar objetos Abstract Factory
+        for (GameObject obj : objetos) obj.update(dt * velocidadFactor);
 
         // 2) mover cocodrilos
         //for (Croc c : crocs) c.update(dt * velocidadFactor);
@@ -169,7 +220,7 @@ public class GameState {
         }
     }
 
-    public String toJson() {
+    public String toJson(String pantalla) {
         // JSON sencillo a mano (puedes cambiar a una lib luego)
         StringBuilder sb = new StringBuilder();
         sb.append("{\"tick\":").append(tick);
@@ -188,6 +239,16 @@ public class GameState {
                 sb.append(lianas.get(i).toJson());
             }
         }
+        // Enviar SOLO objetos de esta pantalla
+        sb.append(",\"objetos\":[");
+        boolean first = true;
+        for (GameObject o : objetos) {
+            if (!pantalla.equals(o.getPantallaObjetivo())) continue;
+
+            if (!first) sb.append(",");
+            sb.append(o.toJson());
+            first = false;
+        }
         //for (int i = 0; i < crocs.size(); i++) {
           //  if (i>0) sb.append(",");
             //sb.append(crocs.get(i).toJson());
@@ -200,23 +261,5 @@ public class GameState {
         sb.append("]}");
         return sb.toString();
     }
-    // -----------------------
-    // CLASES DE ENTIDADES (POJO)
-    // -----------------------
-
-    // ---- modelos «POJO» mínimos ----
-    static class Croc {
-        String tipo; int lianaId; float vel; float altura=0; int dir=1;
-        Croc(String t,int l,float v){tipo=t; lianaId=l; vel=v;}
-        void update(float dt){
-            if("Rojo".equals(tipo)){ altura += dir*vel*dt; if(altura>100||altura<0) dir*=-1; }
-            else { altura -= vel*dt; /* si pasa <0, cae... */ }
-        }
-        String toJson(){ return "{\"tipo\":\""+tipo+"\",\"liana\":"+lianaId+",\"altura\":"+altura+"}"; }
-    }
-    static class Fruit {
-        int lianaId; float altura; int puntos;
-        Fruit(int l,float a,int p){lianaId=l; altura=a; puntos=p;}
-        String toJson(){ return "{\"liana\":"+lianaId+",\"altura\":"+altura+",\"puntos\":"+puntos+"}"; }
-    }
+    
 }

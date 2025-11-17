@@ -16,10 +16,21 @@ import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
+    
     private final Socket socket;
     private final GameState state;
     private final GameServer server;
     private PrintWriter out;
+    //-----------
+    private String pantallaId;
+    private String tipo;
+
+    public void setPantallaId(String id){ this.pantallaId = id; }
+    public String getPantallaId(){ return pantallaId; }
+
+    public void setTipo(String t){ this.tipo = t; }
+    public String getTipo(){ return tipo; }
+
 
     public ClientHandler(Socket socket, GameState state, GameServer server) {
         this.socket = socket; this.state = state; this.server = server;
@@ -39,7 +50,7 @@ public class ClientHandler implements Runnable {
             String line;
             // ACA EL SERVER RECIBE MENSAJES DEL CLIENTE
             while ((line = in.readLine()) != null) {
-                //System.out.println("[Server] Received: " + line);
+                System.out.println("[Server] Received: " + line);
                 handle(line.trim());
             }
         } catch (IOException e) {

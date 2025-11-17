@@ -2,20 +2,25 @@ package logic.factory;
 //fábrica que crea cocodrilos.
 
 import domain.entities.*;
-public class CrocFactory implements GameObjectFactory {
+import domain.entities.BlueCroc;
+import domain.entities.RedCroc;
+import domain.entities.GameObject;
+
+public class CrocFactory extends GameObjectFactory {
 
     @Override
-    public GameObject create(String... p) {
-
-        String tipo = p[0];   // rojo | azul
-        int liana = Integer.parseInt(p[1]);
-        float vel = Float.parseFloat(p[2]);
+    public GameObject create(String tipo, int liana, float velocidad) {
 
         switch (tipo.toLowerCase()) {
-            // crea los objetos RedCroc y BlueCroc
-            case "rojo": return new RedCroc(liana, vel);
-            case "azul": return new BlueCroc(liana, vel);
-            default: throw new IllegalArgumentException("Tipo croc inválido");
+            case "rojo":
+            case "red":
+                return new RedCroc(liana, velocidad);
+
+            case "azul":
+            case "blue":
+                return new BlueCroc(liana, velocidad);
         }
+
+        throw new IllegalArgumentException("Tipo de cocodrilo no válido: " + tipo);
     }
 }
