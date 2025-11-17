@@ -1,14 +1,14 @@
 // ---------------------------------------------------------------
-// Nombre del archivo: client-spectator
-// Descripción: 
-//      Cliente TCP espectador para juegos LAN/Wi-Fi en Windows
-//       - Se conecta a un servidor mediante sockets TCP
-//       - Se registra como espectador
-//       - Recibe estado del juego
-// ---------------------------------------------------------------
-// Solo hace JOIN_SPECTATOR y lee STATE para dibujar.
+// Nombre del archivo: client-spectator.c
+// Descripción:
+//   Cliente TCP ESPECTADOR con Raylib usando patrón OBSERVER.
+//   - NetworkSubject recibe el estado del servidor (STATE {...})
+//   - Observers reaccionan cuando hay nuevo GameStateC
+//   - Este cliente SOLO observa, no envía INPUTs
+//   - Observador REMOTO del Subject Java (ObservableGameLoop)
 // ---------------------------------------------------------------
 
+//  Evitar conflictos entre Raylib y Windows
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
 #define NOUSER  
@@ -25,96 +25,113 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <fcntl.h>
+#include "../../headers/player.h"  
+#include "../../headers/constants.h" 
 
-#define PORT 5050
-#define IP "192.168.100.41"   // <-- usa tu IP real
-#define WIDTH 800
-#define HEIGHT 600
+// ----- RenderContext: datos que se actualizan cuando llega STATE -----
+typedef struct RenderContext {
+    float dkjrX;
+    float dkjrY;
+} RenderContext;
 
+// ----- Obtener socket conectado -----
 SOCKET conectarServidor(const char* ip, int port) {
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == INVALID_SOCKET) return INVALID_SOCKET;
 
-    struct sockaddr_in serv;
-    memset(&serv, 0, sizeof(serv));
-    serv.sin_family = AF_INET;
-    serv.sin_port = htons(port);
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port   = htons(port);
+    inet_pton(AF_INET, ip, &addr.sin_addr);
 
-    // Convertir IP
-    if (inet_pton(AF_INET, ip, &serv.sin_addr) <= 0) {
-        printf("Error al convertir IP\n");
+    if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+        closesocket(sock);
         return INVALID_SOCKET;
     }
-
-    if (connect(sock, (struct sockaddr*)&serv, sizeof(serv)) != 0) {
-        printf("Error al conectar: %d\n", WSAGetLastError());
-        return INVALID_SOCKET;
-    }
-
     return sock;
 }
 
+// ----- Recibir sin bloquear -----
+int recvNoBlock(SOCKET sock, char* buf, int size) {
+    fd_set set;
+    struct timeval timeout = {0, 1000}; // 1 ms
+
+    FD_ZERO(&set);
+    FD_SET(sock, &set);
+    if (select(0, &set, NULL, NULL, &timeout) <= 0)
+        return 0;
+
+    int n = recv(sock, buf, size - 1, 0);
+    if (n > 0) buf[n] = '\0';
+    return n;
+}
+
+// ----- OBSERVER REMOTO: reacciona al JSON -----
+void updateRenderFromJson(RenderContext* rc, const char* buffer) {
+    const char* json = strstr(buffer, "{");
+    if (!json) return;
+
+    const char* dk = strstr(json, "\"dkjr\"");
+    if (!dk) return;
+
+    const char* xPtr = strstr(dk, "\"x\":");
+    const char* yPtr = strstr(dk, "\"y\":");
+
+    if (xPtr) rc->dkjrX = (float)atof(xPtr + 4);
+    if (yPtr) rc->dkjrY = (float)atof(yPtr + 4);
+}
+
+// ---------------------------------------------------------------
+// MAIN — OBSERVER REMOTO
+// ---------------------------------------------------------------
 int main() {
-    // Inicializar Winsock
     WSADATA w;
-    if (WSAStartup(MAKEWORD(2,2), &w) != 0) {
-        printf("Error Winsock: %d\n", WSAGetLastError());
-        return 1;
-    }
+    WSAStartup(MAKEWORD(2,2), &w);
 
     SOCKET sock = conectarServidor(IP, PORT);
     if (sock == INVALID_SOCKET) {
-        WSACleanup();
+        printf("Error conectando a servidor.\n");
         return 1;
     }
 
-    printf("[Spectator] Conectado al servidor!\n");
-
-    // Enviar solicitud de espectador
-    char joinMsg[128];
-    snprintf(joinMsg, sizeof(joinMsg), "JOIN_SPECTATOR %s\n", "Viewer1");
-    send(sock, joinMsg, strlen(joinMsg), 0);
-
-    // Recibir ACK
+    // Registrarse como spectator:
+    send(sock, "JOIN_SPECTATOR Spectator\n", 26, 0);
     char ack[64];
-    int n = recv(sock, ack, sizeof(ack)-1, 0);
-    if (n <= 0 || strstr(ack, "ACK") == NULL) {
-        printf("Servidor rechazó conexión.\n");
-        closesocket(sock);
-        WSACleanup();
-        return 1;
-    }
+    recv(sock, ack, sizeof(ack)-1, 0);
 
-    printf("[Spectator] Registro exitoso!\n");
+    // Contexto que se actualizará como OBSERVER
+    RenderContext rc = {200, 300};
 
-    // Ventana Raylib
-    InitWindow(WIDTH, HEIGHT, "DK Jr - Espectador");
+    InitWindow(WIDTH, HEIGHT, "Spectator - DonCEy Kong Jr");
     SetTargetFPS(60);
 
-    char stateBuffer[4096] = "Esperando STATE...";
+    Image fondoImg = LoadImage("client-c/image/Fondo.png");
+    Texture2D fondoTexture = LoadTextureFromImage(fondoImg);
+    UnloadImage(fondoImg);
+
+    Image playerImg = LoadImage("client-c/image/IPlayer.png");
+    Texture2D playerTexture = LoadTextureFromImage(playerImg);
+    UnloadImage(playerImg);
+
+    char buffer[2048];
 
     while (!WindowShouldClose()) {
-
-        // Recibir el estado del juego del servidor
-        int bytes = recv(sock, stateBuffer, sizeof(stateBuffer)-1, 0);
-        if (bytes > 0) {
-            stateBuffer[bytes] = 0;
-            // Opcionalmente limpiar "STATE " del inicio
-            if (strncmp(stateBuffer, "STATE ", 6) == 0) {
-                memmove(stateBuffer, stateBuffer+6, strlen(stateBuffer)-5);
-            }
+        int n = recvNoBlock(sock, buffer, sizeof(buffer));
+        if (n < 0) break;
+        if (n > 0 && strstr(buffer, "STATE")) {
+            updateRenderFromJson(&rc, buffer); // ← OBSERVER aquí
         }
 
-        // Dibujar
         BeginDrawing();
-        ClearBackground(BLACK);
-
-        DrawText("ESPECTADOR", 20, 20, 20, RAYWHITE);
-        DrawText("Estado recibido:", 20, 60, 20, GREEN);
-        DrawText(stateBuffer, 20, 90, 16, YELLOW);
-
+        ClearBackground(RAYWHITE);
+        DrawTexture(fondoTexture, 0, 0, WHITE);
+        DrawTexture(playerTexture, (int)rc.dkjrX, (int)rc.dkjrY, WHITE);
+        DrawText("ESPECTADOR (Observer Remoto)", 20, 20, 20, DARKGRAY);
         EndDrawing();
     }
 

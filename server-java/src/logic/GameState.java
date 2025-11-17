@@ -35,14 +35,14 @@ public class GameState {
     private final List<ClientHandler> jugadores = new ArrayList<>();
     private final List<ClientHandler> espectadores = new ArrayList<>();
 
-
+    //Lista de jugadores lógicos
+    private final Map<String, Player> players = new LinkedHashMap<>();
+    
     // listas «conceptuales»
     private final List<Croc> crocs = new ArrayList<>();
     private final List<Fruit> fruits = new ArrayList<>();
     private final List<Liana> lianas = new ArrayList<>();
-    private final Map<String, Player> players = new LinkedHashMap<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
-
     private float velocidadFactor = 1.0f;
     private long tick = 0;
 
@@ -75,11 +75,13 @@ public class GameState {
             return false;
         }
         jugadores.add(handler);
+
         // Instanciar el Player y añadirlo al mapa
-        
         int playerId = players.size() + 1;
-        players.put("Player" + playerId, new Player(playerId, lianas));
-        System.out.println("[GameState] Jugador añadido: " + nick + " (" + jugadores.size() + "/" + MAX_JUGADORES + ")");
+        String key = "Player" + playerId;
+
+        Player newPlayer = new Player(playerId, lianas);
+        players.put(key, newPlayer);
         return true;
     }
 
@@ -158,7 +160,7 @@ public class GameState {
             int jump = Integer.parseInt(p[6]);
 
             if (!players.isEmpty()) {
-                Player firstPlayer = players.values().iterator().next();
+                Player firstPlayer = players.get(0);
                 firstPlayer.getMono().applyInput(up, down, left, right, jump, dt);
             }
         } catch (Exception e) {
@@ -172,7 +174,7 @@ public class GameState {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"tick\":").append(tick);
         if (!players.isEmpty()) {
-        Player firstPlayer = players.values().iterator().next();
+        Player firstPlayer = players.get(0);
         sb.append(",\"dkjr\":").append(firstPlayer.getMono().toJson());
         } else {
             sb.append(",\"dkjr\":null");

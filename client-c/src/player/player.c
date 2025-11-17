@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../headers/player.h"
+#include "../../headers/player.h"
 #include "../../headers/structures.h"  
 #include "../../headers/constants.h"
 
