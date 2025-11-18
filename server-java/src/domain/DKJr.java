@@ -16,7 +16,6 @@
      */
     package domain;
 
-    import java.util.ArrayList;
     import java.util.List;
 
     public class DKJr {
@@ -24,27 +23,30 @@
         private float y = 650;
         private float velocityX = 0;
         private float velocityY = 0;
-        private float gravity = 500f;
-        private float jump = -350f;
-        private float speed = 100f;
+        private final float gravity = 500f;
+        private final float jump = -350f;
+        private final float speed = 100f;
 
         private boolean onLiana = false;
         private Liana currentLiana = null;
         // Lista de lianas
-        private List<Liana> lianas;
+        private final List<Liana> lianas;
         // Pos del Mono en la liana
         private boolean leftSideOfLiana = true;
         private final float lianaOffset = 30f;
         private boolean isAlive = true;
         private boolean isJumping = false;
-        private boolean isPlatform = false;
+        // Lista de plataformas
+        private final List<Plataforma> plataformas;
+        private boolean onPlatform = false;
         
 
-        private float minX = 0, maxX = 830;
-        private float minY = 0, maxY = 700;
+        private final float minX = 0, maxX = 830;
+        private final float minY = 0, maxY = 870;
 
-        public DKJr(List<Liana> lianas) {
+        public DKJr(List<Liana> lianas, List<Plataforma> plataformas) {
             this.lianas = lianas;
+            this.plataformas = plataformas;
         }
 
         public float getX() { return x; }
@@ -66,20 +68,17 @@
 
         public void applyInput(int up, int down, int left, int right, int jump, float dt) {
 
-            float move = speed * dt;
-
             if (onLiana && currentLiana != null) {
                 // Movimiento en liana
-                movementLiana(up, down, jump,  left, right, move);
+                movementLiana(up, down, jump,  left, right, dt);
             } else {
                 // Movimiento libre
-                verificarPlataforma();
                 platformMovement(up, down, left, right, jump, dt);
                 checkLianaGrab();
             }
             
             verificarLimites(); 
-    }
+        }
 
         private void movementLiana(int up, int down, int jump,  int left, int right, float dt) {
             float move = 5 * dt;
@@ -91,11 +90,13 @@
             // Cambio lateral de lado
             if (left == 1)  leftSideOfLiana = true;
             if (right == 1) leftSideOfLiana = false;
+
             x = currentLiana.getXPosition() + (leftSideOfLiana ? -lianaOffset : lianaOffset);
+
             if (jump == 1) {
                 onLiana = false;
                 currentLiana = null;
-                velocityY = jump;
+                velocityY = this.jump;
                 isJumping = true;
                 return;
             }
@@ -117,31 +118,49 @@
         }
 
         private void platformMovement(int up, int down, int left, int right, int jump, float dt) {
+            float oldY = y; 
+
             // Aplicar gravedad si no está en liana
-            velocityY += gravity * dt;
+            if (!onPlatform) {
+                velocityY += gravity * dt;
+            }
 
             velocityX = 0;
             if (right == 1) velocityX = speed;
             if (left == 1) velocityX = -speed;
 
             // Movimiento horizontal con salto
-            if (jump == 1 && isPlatform && !isJumping) {
+            if (jump == 1 && onPlatform && !isJumping) {
                 velocityY = this.jump;  
                 isJumping = true;
-                isPlatform = false;
+                onPlatform = false;
             }
 
+            // Movimiento
             x += velocityX * dt;
             y += velocityY * dt;
-        }
 
-        private void verificarPlataforma() {
-            // Si toca el límite inferior
-            if (y >= maxY) {
-                y = maxY;
-                isPlatform = true;
-                isJumping = false;
-                velocityY = 0;
+            // Reset valor
+            onPlatform = false;
+
+            // Aplicar logica para cada plataformma
+            for (Plataforma p : plataformas){
+
+                // Impactar caida
+                if (velocityY > 0 && p.canLandOn(x, y, oldY)){
+                    y = p.getY();
+                    velocityY = 0;
+                    isJumping = false;
+                    onPlatform = true;
+                    break;
+                } else if (p.hitsHead(x, y, 40)){
+                    y = p.getY() + p.getHeight();
+                    velocityY = 0;
+                }
+                if (p.hitsHead(x, y, 40)) {
+                    y = p.getY() + p.getHeight();
+                    velocityY = 0;
+                }
             }
         }
         
@@ -154,6 +173,7 @@
                        // x = liana.getXPosition(); // Centrar en liana
                         velocityY = 0; // Detener caída/salto
                         isJumping = false;
+                        onPlatform = false;
                         break;
                     }
                 }
@@ -166,23 +186,14 @@
             if (x > maxX) x = maxX;
             
             // Colisión con el suelo
-            if (y > maxY) {
-                y = maxY;
-                isPlatform = true; 
-                isJumping = false; 
-                velocityY = 0;
-            }
-            
-            // Techo
             if (y < minY) {
                 y = minY;
                 velocityY = 0;
             }
-        }
-
-        private void addLiana(float x, float minY, float maxY) {
-            int id = lianas.size(); // ID automático
-            lianas.add(new Liana(id, x, minY, maxY));
+            if (y > maxY) {
+            y = maxY;
+            velocityY = 0;
+            }
         }
 
         public String toJson() {

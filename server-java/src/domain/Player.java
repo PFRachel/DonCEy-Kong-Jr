@@ -25,13 +25,13 @@ public class Player {
 
     private final DKJr personaje; // asociar mono
 
-    public Player(int playerId, List<Liana> lianas ) {
+    public Player(int playerId, List<Liana> lianas,  List<Plataforma> plataformas) {
         this.playerId = playerId;
-        this.personaje = new DKJr(lianas);
+        this.personaje = new DKJr(lianas, plataformas);
     }
 
 
-    public int getPlayerId() { return playerId; }
+    public int getPlayerId() { return playerId; } 
     public int getScore() { return score; }
     public int getLevel() { return level; }
     public int getLives() { return lives; }
