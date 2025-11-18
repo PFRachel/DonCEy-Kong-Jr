@@ -24,20 +24,26 @@ public class Player {
     private int lives = 3;
 
     private final DKJr personaje; // asociar mono
+    private String pantallaId;
 
-    public Player(int playerId, List<Liana> lianas ) {
+    public Player(int playerId, List<Liana> lianas,  List<Plataforma> plataformas) {
         this.playerId = playerId;
-        this.personaje = new DKJr(lianas);
+        this.personaje = new DKJr(lianas, plataformas);
     }
 
 
-    public int getPlayerId() { return playerId; }
+    public int getPlayerId() { return playerId; } 
     public int getScore() { return score; }
     public int getLevel() { return level; }
     public int getLives() { return lives; }
 
     public DKJr getMono() { return personaje; }
+    public String getPantallaId() { return pantallaId; }
 
+    public void setPantallaId(String pantallaId) {
+        this.pantallaId = pantallaId;
+    }
+    
     public void addScore(int points) {
         score += points;
     }

@@ -60,8 +60,11 @@ int main() {
         WSACleanup();
         return 1;
     }
-    char ackBuffer[64];
+    char ackBuffer[128];
     int bytes = recv(serverSocket, ackBuffer, sizeof(ackBuffer)-1, 0);
+    
+    char miPantallaId[32] = "pantalla1"; // valor por default
+
     if (bytes > 0) {
         ackBuffer[bytes] = '\0';
         if (strstr(ackBuffer, "ACK") == NULL) {
@@ -69,6 +72,17 @@ int main() {
             closesocket(serverSocket);
             WSACleanup();
             return 1;
+        }
+
+        char* pantalla_start = strstr(ackBuffer, "pantalla");
+        if (pantalla_start) {
+
+            // Extraer idpantalla
+            sscanf(pantalla_start, "%s", miPantallaId);
+            printf("[Player] PantallaId asignado: %s\n", miPantallaId);
+        } else {
+            printf("[Player] Usando por defecto: %s\n", 
+                   miPantallaId);
         }
     } else {
         printf("Conexión cerrada por el servidor.\n");
@@ -90,7 +104,6 @@ int main() {
     GameState miJuego;
     inicializarGameState(&miJuego);
 
-    char ultimoMensaje[256] = " Esperando mensaje del servidor...";
     float deltaTime = 0.0f;
 
     int tick = 0;
@@ -107,19 +120,18 @@ int main() {
         int jump = IsKeyDown(KEY_SPACE);
  
         // Enviar al servidor los inputs
-        char msg[64];
-        snprintf(msg, sizeof(msg), "INPUT %d %d %d %d %d %d\n",
-            tick, up, down, left, right, jump);
+        char msg[128];
+        snprintf(msg, sizeof(msg), "INPUT %d %d %d %d %d %d %s\n",
+            tick, up, down, left, right, jump, miPantallaId);
         send(serverSocket, msg, strlen(msg), 0);
         tick++;
 
         // Recibir estado 
-        char buffer[2048];
+        char buffer[4096];
         int bytesRecibidos = recibirMensaje(serverSocket, buffer, sizeof(buffer)-1);
         
         // Procesar mensaje del server
         if (bytesRecibidos > 0) {
-            printf("[Cliente] JSON recibido: %s\n", buffer);
             if (strstr(buffer, "\"dkjr\":null") != NULL) {
                 // No hay datos válidos, NO actualizar nada
                 continue;

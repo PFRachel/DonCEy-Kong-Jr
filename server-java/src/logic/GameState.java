@@ -11,8 +11,8 @@
  */
 package logic;
 
-import domain.DKJr;
 import domain.Liana;
+import domain.Plataforma;
 import domain.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -44,8 +44,8 @@ public class GameState {
     
     // listas «conceptuales»
     private final List<GameObject> objetos = new ArrayList<>();
-
     private final List<Liana> lianas = new ArrayList<>();
+    private final List<Plataforma> plataformas = new ArrayList<>();
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
     private float velocidadFactor = 1.0f;
     private long tick = 0;
@@ -64,6 +64,10 @@ public class GameState {
         lianas.add(new Liana(7, 700, 50, 400));
         lianas.add(new Liana(8, 750, 120, 650));
     
+        // Agregar plataformas
+        // FALTA AGREGAR MAS
+        // PLATAFORMA BASE-PARA QUE VEAS COMO TIENE Q SER
+        plataformas.add(new Plataforma(20, 750, 100, 20));
     }
 
     // -----------------------
@@ -71,7 +75,9 @@ public class GameState {
     // -----------------------
     public synchronized boolean addPlayer(String nick, ClientHandler handler) {
 
-        if (jugadores.size() >= MAX_JUGADORES) return false;
+        if (jugadores.size() >= MAX_JUGADORES) {
+                return false;
+        }
 
         String pantalla = "pantalla" + (jugadores.size() + 1);
         pantallas.put(pantalla, handler);
@@ -83,17 +89,25 @@ public class GameState {
 
         // Crear jugador lógico
         int playerId = players.size() + 1;
-        players.put("Player" + playerId, new Player(playerId, lianas));
+        Player newPlayer = new Player(playerId, lianas, plataformas);
+        newPlayer.setPantallaId(pantalla);
+        players.put("Player" + playerId, newPlayer);
 
         System.out.println("[GameState] Jugador " + nick + " asignado a " + pantalla);
         return true;
     }
 
+    /**
+     * Intenta registrar un nuevo espectador.
+     * @return true si se registró, false si ya hay 4 espectadores.
+     */
     public synchronized boolean addSpectator(String nick, ClientHandler handler) {
 
-        if (espectadores.size() >= MAX_ESPECTADORES) return false;
+        if (espectadores.size() >= MAX_ESPECTADORES) {
+                return false;
+        }
 
-        String pantalla = "pantalla" + (espectadores.size() + 1);
+        String pantalla = "spectator" + (espectadores.size() + 1);
         pantallas.put(pantalla, handler);
 
         handler.setPantallaId(pantalla);
@@ -111,9 +125,9 @@ public class GameState {
     // COMANDOS DEL ADMIN: ABSTRACT FACTORY
     // ==========================================================
 
+
     // Ejemplo: ADMIN_SPAWN_CROC rojo 3 1.5 pantalla2
     public void adminSpawnCroc(String msg) {
-
         String[] p = msg.split("\\s+");
         if (p.length < 5) {
             System.out.println("[ADMIN] Formato inválido: ADMIN_SPAWN_CROC tipo liana vel pantalla");
@@ -134,7 +148,7 @@ public class GameState {
         System.out.println("[ADMIN] Cocodrilo creado en " + pantalla);
     }
 
-    // Ejemplo: ADMIN_SPAWN_FRUIT 2 70 300 pantalla1
+     // Ejemplo: ADMIN_SPAWN_FRUIT 2 70 300 pantalla1
     public void adminSpawnFruit(String msg) {
 
         String[] p = msg.split("\\s+");
@@ -176,6 +190,7 @@ public class GameState {
 
         System.out.println("[ADMIN] Fruta eliminada de " + pantalla);
     }
+
     // ---- bucle de juego ----
     public void update(float dt) {
         tick++;
@@ -200,51 +215,51 @@ public class GameState {
 
     private void processInput(String msg, float dt) {
         try {
-            // Formato: "INPUT <tick> <up> <down> <left> <right> <jump>"
+            // Formato: "INPUT <tick> <up> <down> <left> <right> <jump> <pantallaId>"
             String[] p = msg.split("\\s+");
-            if (p.length < 7) return;
-            
+            if (p.length < 8) return;
             int up = Integer.parseInt(p[2]);
             int down = Integer.parseInt(p[3]);
             int left = Integer.parseInt(p[4]);
             int right = Integer.parseInt(p[5]);
             int jump = Integer.parseInt(p[6]);
+            String pantallaId = p[7];
 
-            if (players.isEmpty()) return;
-
-            Player firstPlayer = players.values().iterator().next();
-            firstPlayer.getMono().applyInput(up, down, left, right, jump, dt);
+            Player targetPlayer = null;
+            for (Player player : players.values()) {
+                if (pantallaId.equals(player.getPantallaId())) {
+                    targetPlayer = player;
+                    break;
+                }
+            }
+            if (targetPlayer != null) {
+            targetPlayer.getMono().applyInput(up, down, left, right, jump, dt);
+        }
         } catch (Exception e) {
             System.err.println("Error procesando input: " + msg);
             e.printStackTrace();
         }
     }
 
-    public String toJson(String pantalla) {
+
+    public String toJson() {
         // JSON sencillo a mano (puedes cambiar a una lib luego)
         StringBuilder sb = new StringBuilder();
         sb.append("{\"tick\":").append(tick);
-        if (!players.isEmpty()) {
-            Player firstPlayer = players.values().iterator().next();
-            sb.append(",\"dkjr\":").append(firstPlayer.getMono().toJson());
-        } else {
-            sb.append(",\"dkjr\":null");
-        }
-        sb.append(",\"lianas\":[");
-        if (!players.isEmpty()) {
-            Player firstPlayer = players.values().iterator().next();
-            List<Liana> lianas = firstPlayer.getMono().getLianas();
-            for (int i = 0; i < lianas.size(); i++) {
-                if (i > 0) sb.append(",");
-                sb.append(lianas.get(i).toJson());
-            }
+        sb.append(",\"players\":{");
+        
+        // Incluir TODOS los jugadores
+        boolean first = true;
+        for (Map.Entry<String, Player> entry : players.entrySet()) {
+            if (!first) sb.append(",");
+            sb.append("\"").append(entry.getValue().getPantallaId()).append("\":");
+            sb.append(entry.getValue().getMono().toJson());
+            first = false;
         }
         // Enviar SOLO objetos de esta pantalla
         sb.append(",\"objetos\":[");
-        boolean first = true;
+        first = true;
         for (GameObject o : objetos) {
-            if (!pantalla.equals(o.getPantallaObjetivo())) continue;
-
             if (!first) sb.append(",");
             sb.append(o.toJson());
             first = false;
@@ -261,5 +276,5 @@ public class GameState {
         sb.append("]}");
         return sb.toString();
     }
-    
 }
+    

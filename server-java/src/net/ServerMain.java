@@ -12,9 +12,6 @@
  */
 package net;
 
-//import logic.GameState;   
-//import logic.GameLoop;
-
 public class ServerMain {
     public static void main(String[] args) {
         int port = 5050;
