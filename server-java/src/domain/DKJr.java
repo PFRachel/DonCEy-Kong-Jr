@@ -20,7 +20,7 @@
 
     public class DKJr {
         private float x = 100;
-        private float y = 650;
+        private float y = 700;
         private float velocityX = 0;
         private float velocityY = 0;
         private final float gravity = 500f;

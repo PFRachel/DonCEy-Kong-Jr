@@ -50,24 +50,29 @@
 
         public GameState() {
             // Configuración inicial del mapa
-            // Agregar lianas
-            lianas.add(new Liana(0, 30, 260, 650));
-            lianas.add(new Liana(1, 100, 260, 610));
-            lianas.add(new Liana(2, 200, 440, 655));
-            lianas.add(new Liana(3, 280, 250, 500));
+            // Agregar lianas soloes estas priemras 5 estan bien 
+            lianas.add(new Liana(0, 30, 260, 650));// Extremo izquierdo
+            lianas.add(new Liana(1, 100, 260, 610));// Segunda desde izquierda
+            lianas.add(new Liana(2, 200, 440, 655));// Debajo plataforma media-izquierda
+            lianas.add(new Liana(3, 280, 250, 500));// Centro-izquierda
             lianas.add(new Liana(4, 350, 250, 430));
-
-            // FALTA AJUSTAR POSICION Y LONGITUD
-            lianas.add(new Liana(5, 500, 120, 650));
-            lianas.add(new Liana(6, 600, 400, 600));
-            lianas.add(new Liana(7, 700, 50, 400));
-            lianas.add(new Liana(8, 750, 120, 650));
-            lianas.add(new Liana(9, 750, 120, 650));
-            
-            // Agregar plataformas
-            // FALTA AGREGAR MAS
-            // PLATAFORMA BASE-PARA QUE VEAS COMO TIENE Q SER
-            plataformas.add(new Plataforma(20, 750, 100, 20));
+            lianas.add(new Liana(5, 500, 340, 670));
+            lianas.add(new Liana(6, 570, 340, 670));
+            lianas.add(new Liana(7, 640, 340, 720));  // Penúltima
+            lianas.add(new Liana(8, 720, 380, 780));  // Última del fondo
+            lianas.add(new Liana(9, 760, 390, 790));
+            // ===== PLATAFORMAS =====
+            // Plataforma base (izquierda) 
+            plataformas.add(new Plataforma(20, 750, 100, 20));//base inicial
+            // plataformas.add(new Plataforma(130, 750, 90, 20));   // 2. Pequeña al lado de base
+            // plataformas.add(new Plataforma(205, 460, 115, 20));  // 3. 
+            // plataformas.add(new Plataforma(240, 340, 140, 20));  // 4. 
+            // plataformas.add(new Plataforma(210, 610, 170, 20));  // 5. C
+            // plataformas.add(new Plataforma(400, 610, 360, 20));  // 6. 
+            // plataformas.add(new Plataforma(555, 340, 230, 20));  // 7. Derecha-alta horizontal
+            // plataformas.add(new Plataforma(730, 540, 195, 20));  // 8. Extremo-derecha media
+            // plataformas.add(new Plataforma(628, 210, 270, 20));  // 9.
+            // plataformas.add(new Plataforma(800, 280, 120, 20));  // 10. 
         }
 
         // -----------------------
@@ -194,6 +199,12 @@
                     sb.append(lianas.get(i).toJson());
                 }
             }
+            sb.append(",\"plataformas\":[");
+            for (int i = 0; i < plataformas.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(plataformas.get(i).toJson());
+            }
+
             //for (int i = 0; i < crocs.size(); i++) {
             //  if (i>0) sb.append(",");
                 //sb.append(crocs.get(i).toJson());
