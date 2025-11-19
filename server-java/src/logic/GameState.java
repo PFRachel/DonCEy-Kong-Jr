@@ -118,10 +118,43 @@ public class GameState {
         System.out.println("[GameState] Espectador " + nick + " asignado a " + pantalla);
         return true;
     }
+
     //cola de imputs 
-     public void enqueueInput(String msg) {
+    public void enqueueInput(String msg) {
         inputQueue.add(msg);
     }
+
+    // -----------------------
+    // DESCONEXIÓN DE CLIENTES
+    // -----------------------
+    public synchronized void onClientDisconnected(ClientHandler handler) {
+        if (handler == null) return;
+
+        String pantalla = handler.getPantallaId();
+        String tipo = handler.getTipo();
+
+        if (pantalla == null || tipo == null) return;
+
+        // Quitar del map de pantallas
+        pantallas.remove(pantalla);
+
+        if ("PLAYER".equals(tipo)) {
+            // Quitar de la lista de jugadores
+            jugadores.remove(handler);
+
+            // Quitar el Player lógico asociado a esa pantalla
+            players.entrySet().removeIf(e ->
+                    pantalla.equals(e.getValue().getPantallaId())
+            );
+
+            System.out.println("[GameState] Jugador desconectado de " + pantalla);
+        } else if ("SPECTATOR".equals(tipo)) {
+            // Quitar de la lista de espectadores
+            espectadores.remove(handler);
+            System.out.println("[GameState] Espectador desconectado de " + pantalla);
+        }
+    }
+
     // COMANDOS DEL ADMIN: ABSTRACT FACTORY
     // ==========================================================
 
@@ -256,9 +289,10 @@ public class GameState {
             sb.append(entry.getValue().getMono().toJson());
             first = false;
         }
-        // Enviar SOLO objetos de esta pantalla
+        // Cerrar players y abrir objetos
         sb.append("},\"objetos\":[");
         first = true;
+        // Enviar SOLO objetos de esta pantalla
         for (GameObject o : objetos) {
             if (!first) sb.append(",");
             sb.append(o.toJson());
@@ -277,4 +311,3 @@ public class GameState {
         return sb.toString();
     }
 }
-    

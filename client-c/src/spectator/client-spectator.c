@@ -37,6 +37,7 @@
 typedef struct RenderContext {
     float dkjrX;
     float dkjrY;
+    int   hasPlayer;   // 1 = hay jugador conectado, 0 = no hay jugador
 } RenderContext;
 
 // ----- Obtener socket conectado -----
@@ -74,7 +75,9 @@ int recvNoBlock(SOCKET sock, char* buf, int size) {
 // ----- OBSERVER REMOTO: reacciona al JSON -----
 // Ahora recibe también qué pantalla queremos observar ("pantalla1", "pantalla2", ...)
 void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pantallaIdDestino) {
-    // Localizar el inicio del JSON
+    // Por defecto, asumimos que NO hay jugador para esa pantalla
+    rc->hasPlayer = 0;
+
     const char* json = strstr(buffer, "{");
     if (!json) return;
 
@@ -84,7 +87,7 @@ void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pan
 
     const char* pantallaObj = strstr(json, key);
     if (!pantallaObj) {
-        // No se encontró esa pantalla en este STATE
+        // No se encontró esa pantalla en este STATE → no hay jugador conectado
         return;
     }
 
@@ -98,6 +101,9 @@ void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pan
 
     if (xPtr) rc->dkjrX = (float)atof(xPtr + 4);
     if (yPtr) rc->dkjrY = (float)atof(yPtr + 4);
+
+    // Si llegamos aquí, sí hay datos de jugador
+    rc->hasPlayer = 1;
 }
 
 // ---------------------------------------------------------------
@@ -119,7 +125,7 @@ int main() {
     recv(sock, ack, sizeof(ack)-1, 0);
 
     // Contexto que se actualizará como OBSERVER
-    RenderContext rc = {200, 300};
+    RenderContext rc = {200, 300, 0};
 
     // Pantalla (jugador) que se quiere observar inicialmente
     // "pantalla1" -> Jugador 1, "pantalla2" -> Jugador 2
@@ -158,12 +164,21 @@ int main() {
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawTexture(fondoTexture, 0, 0, WHITE);
-        DrawTexture(playerTexture, (int)rc.dkjrX, (int)rc.dkjrY, WHITE);
-        DrawText("ESPECTADOR (Observer Remoto)", 20, 20, 20, DARKGRAY);
 
-        // Mostrar qué jugador se está observando
+        DrawText("ESPECTADOR (Observer Remoto)", 20, 20, 20, DARKGRAY);
         DrawText(TextFormat("Observando: %s (teclas 1 y 2)", pantallaObjetivo),
                  20, 50, 18, RAYWHITE);
+
+        if (rc.hasPlayer) {
+            // Hay jugador para esa pantalla → dibujar mono
+            DrawTexture(playerTexture, (int)rc.dkjrX, (int)rc.dkjrY, WHITE);
+        } else {
+            // No hay jugador conectado para esa pantalla
+            const char* msg = "NO HAY JUGADOR CONECTADO";
+            int fontSize = 30;
+            int textWidth = MeasureText(msg, fontSize);
+            DrawText(msg,(WIDTH - textWidth)/2, HEIGHT/2, fontSize, RED);
+        }
 
         EndDrawing();
     }
