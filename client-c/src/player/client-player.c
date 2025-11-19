@@ -129,20 +129,31 @@ int main() {
         // Recibir estado 
         char buffer[4096];
         int bytesRecibidos = recibirMensaje(serverSocket, buffer, sizeof(buffer)-1);
-        
+       
         // Procesar mensaje del server
         if (bytesRecibidos > 0) {
+            // Asegurar terminación del string
+            buffer[bytesRecibidos] = '\0';
+
+            // Punto de inicio del JSON completo
+            char* jsonStart = strstr(buffer, "{");
+            if (!jsonStart) {
+                continue;
+            }
+
             if (strstr(buffer, "\"dkjr\":null") != NULL) {
                 // No hay datos válidos, NO actualizar nada
                 continue;
             }
             // Buscar coordenadas en el JSON
-            char* jsonStart = strstr(buffer, "{");
-            if (jsonStart) {
+            char key[64];
+            sprintf(key, "\"%s\":", miPantallaId);  
 
-                // Parsear X
-                char* x_pos = strstr(jsonStart, "\"x\":");
-                char* y_pos = strstr(jsonStart, "\"y\":");
+            char* pantalla_obj = strstr(jsonStart, key);
+            if (pantalla_obj) {
+                // Buscar x y y SOLO dentro de su propio objeto
+                char* x_pos = strstr(pantalla_obj, "\"x\":");
+                char* y_pos = strstr(pantalla_obj, "\"y\":");
 
                 if (x_pos && y_pos) {
                     float x, y;

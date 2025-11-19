@@ -257,7 +257,7 @@ public class GameState {
             first = false;
         }
         // Enviar SOLO objetos de esta pantalla
-        sb.append(",\"objetos\":[");
+        sb.append("},\"objetos\":[");
         first = true;
         for (GameObject o : objetos) {
             if (!first) sb.append(",");

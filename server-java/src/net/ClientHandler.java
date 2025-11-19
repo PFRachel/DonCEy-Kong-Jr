@@ -64,14 +64,16 @@ public class ClientHandler implements Runnable {
         if (msg.startsWith("JOIN_PLAYER")) {
             String nick = msg.substring("JOIN_PLAYER".length()).trim();
             if (state.addPlayer(nick, this)) {
-                send("ACK\n");
+                // Enviar ACK con el pantallaId asignado
+                send("ACK " + pantallaId + "\n");
             } else {
                 send("ERR max_players\n");
             }
         } else if (msg.startsWith("JOIN_SPECTATOR")) {
             String nick = msg.substring("JOIN_SPECTATOR".length()).trim();
             if (state.addSpectator(nick, this)) {
-                send("ACK\n");
+                // Enviar ACK con el pantallaId asignado
+                send("ACK " + pantallaId + "\n");
             } else {
                 send("ERR max_spectators\n");
             }
