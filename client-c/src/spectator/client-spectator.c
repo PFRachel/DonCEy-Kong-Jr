@@ -72,15 +72,29 @@ int recvNoBlock(SOCKET sock, char* buf, int size) {
 }
 
 // ----- OBSERVER REMOTO: reacciona al JSON -----
-void updateRenderFromJson(RenderContext* rc, const char* buffer) {
+// Ahora recibe también qué pantalla queremos observar ("pantalla1", "pantalla2", ...)
+void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pantallaIdDestino) {
+    // Localizar el inicio del JSON
     const char* json = strstr(buffer, "{");
     if (!json) return;
 
-    const char* dk = strstr(json, "\"dkjr\"");
-    if (!dk) return;
+    // Construir clave de la pantalla: "pantalla1":  o  "pantalla2":
+    char key[64];
+    snprintf(key, sizeof(key), "\"%s\":", pantallaIdDestino);
 
-    const char* xPtr = strstr(dk, "\"x\":");
-    const char* yPtr = strstr(dk, "\"y\":");
+    const char* pantallaObj = strstr(json, key);
+    if (!pantallaObj) {
+        // No se encontró esa pantalla en este STATE
+        return;
+    }
+
+    // Ir al inicio del objeto del jugador
+    const char* objStart = strchr(pantallaObj, '{');
+    if (!objStart) return;
+
+    // Buscar las coordenadas dentro de ese objeto
+    const char* xPtr = strstr(objStart, "\"x\":");
+    const char* yPtr = strstr(objStart, "\"y\":");
 
     if (xPtr) rc->dkjrX = (float)atof(xPtr + 4);
     if (yPtr) rc->dkjrY = (float)atof(yPtr + 4);
@@ -107,6 +121,10 @@ int main() {
     // Contexto que se actualizará como OBSERVER
     RenderContext rc = {200, 300};
 
+    // Pantalla (jugador) que se quiere observar inicialmente
+    // "pantalla1" -> Jugador 1, "pantalla2" -> Jugador 2
+    char pantallaObjetivo[32] = "pantalla1";
+
     InitWindow(WIDTH, HEIGHT, "Spectator - DonCEy Kong Jr");
     SetTargetFPS(60);
 
@@ -121,10 +139,20 @@ int main() {
     char buffer[2048];
 
     while (!WindowShouldClose()) {
+
+        // Cambiar de jugador observado con teclas 1 y 2
+        if (IsKeyPressed(KEY_ONE)) {
+            strcpy(pantallaObjetivo, "pantalla1");
+        }
+        if (IsKeyPressed(KEY_TWO)) {
+            strcpy(pantallaObjetivo, "pantalla2");
+        }
+
         int n = recvNoBlock(sock, buffer, sizeof(buffer));
         if (n < 0) break;
         if (n > 0 && strstr(buffer, "STATE")) {
-            updateRenderFromJson(&rc, buffer); // ← OBSERVER aquí
+            // ← OBSERVER aquí, ahora filtrando por pantallaObjetivo
+            updateRenderFromJson(&rc, buffer, pantallaObjetivo);
         }
 
         BeginDrawing();
@@ -132,6 +160,11 @@ int main() {
         DrawTexture(fondoTexture, 0, 0, WHITE);
         DrawTexture(playerTexture, (int)rc.dkjrX, (int)rc.dkjrY, WHITE);
         DrawText("ESPECTADOR (Observer Remoto)", 20, 20, 20, DARKGRAY);
+
+        // Mostrar qué jugador se está observando
+        DrawText(TextFormat("Observando: %s (teclas 1 y 2)", pantallaObjetivo),
+                 20, 50, 18, RAYWHITE);
+
         EndDrawing();
     }
 
