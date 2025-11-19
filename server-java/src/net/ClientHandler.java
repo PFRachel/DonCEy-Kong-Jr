@@ -56,26 +56,42 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.out.println("[Server] Client IO closed: " + e.getMessage());
         } finally {
+            // Avisar al GameState que este cliente se desconectó
+            state.onClientDisconnected(this);
             server.remove(this);
             try { socket.close(); } catch (IOException ignored) {}
         }
     }
+
     private void handle(String msg) {
         if (msg.startsWith("JOIN_PLAYER")) {
             String nick = msg.substring("JOIN_PLAYER".length()).trim();
             if (state.addPlayer(nick, this)) {
-                // Enviar ACK con el pantallaId asignado
-                send("ACK " + pantallaId + "\n");
+                // IMPORTANTE: enviar qué pantalla le tocó a este jugador
+                // para que el cliente C pueda poner miPantallaId = "pantalla1" o "pantalla2"
+                String pantalla = getPantallaId(); // "pantalla1" o "pantalla2"
+                if (pantalla != null) {
+                    send("ACK " + pantalla + "\n");
+                } else {
+                    // Por seguridad, al menos mandar ACK simple
+                    send("ACK\n");
+                }
             } else {
                 send("ERR max_players\n");
+                try { socket.close(); } catch (IOException ignored) {}
             }
         } else if (msg.startsWith("JOIN_SPECTATOR")) {
             String nick = msg.substring("JOIN_SPECTATOR".length()).trim();
             if (state.addSpectator(nick, this)) {
-                // Enviar ACK con el pantallaId asignado
-                send("ACK " + pantallaId + "\n");
+                String target = state.getSpectatorTargetFor(this);
+                if (target != null) {
+                    send("ACK " + target + "\n");
+                } else {
+                    send("ACK\n");
+                }
             } else {
                 send("ERR max_spectators\n");
+                try { socket.close(); } catch (IOException ignored) {}
             }
             // INPUT <tick> <up> <down> <left> <right> <jump>
         } else if (msg.startsWith("INPUT")) {

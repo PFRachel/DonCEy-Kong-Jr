@@ -50,6 +50,11 @@ public class GameState {
     private float velocidadFactor = 1.0f;
     private long tick = 0;
 
+    // Espectadores por jugador (pantalla1 / pantalla2)
+    private final Map<ClientHandler, String> spectatorTargets = new HashMap<>();
+    private int spectatorsPantalla1 = 0;
+    private int spectatorsPantalla2 = 0;
+
     public GameState() {
         // Configuración inicial del mapa (6 lianas)
         lianas.add(new Liana(0, 30, 260, 650));
@@ -99,12 +104,28 @@ public class GameState {
 
     /**
      * Intenta registrar un nuevo espectador.
-     * @return true si se registró, false si ya hay 4 espectadores.
+     * Reglas:
+     *  - Máximo 2 espectadores por pantalla (pantalla1 y pantalla2).
+     *  - Máximo 4 espectadores en total.
+     *  - Si aún no existe el jugador 2, igual se pueden asignar
+     *    espectadores a pantalla2 (verán "NO HAY JUGADOR CONECTADO").
      */
     public synchronized boolean addSpectator(String nick, ClientHandler handler) {
 
         if (espectadores.size() >= MAX_ESPECTADORES) {
                 return false;
+        }
+
+        // Decidir a qué pantalla se le asigna este espectador
+        // Regla: hasta 2 por pantalla. Primero pantalla1, luego pantalla2.
+        String targetPantalla = null;
+        if (spectatorsPantalla1 < 2) {
+            targetPantalla = "pantalla1";
+        } else if (spectatorsPantalla2 < 2) {
+            targetPantalla = "pantalla2";
+        } else {
+            // Ya hay 2 en cada pantalla (4 en total)
+            return false;
         }
 
         String pantalla = "spectator" + (espectadores.size() + 1);
@@ -115,8 +136,21 @@ public class GameState {
 
         espectadores.add(handler);
 
-        System.out.println("[GameState] Espectador " + nick + " asignado a " + pantalla);
+        // Registrar a qué jugador está asociado este espectador
+        spectatorTargets.put(handler, targetPantalla);
+        if ("pantalla1".equals(targetPantalla)) {
+            spectatorsPantalla1++;
+        } else if ("pantalla2".equals(targetPantalla)) {
+            spectatorsPantalla2++;
+        }
+
+        System.out.println("[GameState] Espectador " + nick + " asignado a " + targetPantalla);
         return true;
+    }
+
+    // Devuelve a qué pantalla (pantalla1 / pantalla2) está ligado un espectador
+    public synchronized String getSpectatorTargetFor(ClientHandler handler) {
+        return spectatorTargets.get(handler);
     }
 
     //cola de imputs 
@@ -151,6 +185,15 @@ public class GameState {
         } else if ("SPECTATOR".equals(tipo)) {
             // Quitar de la lista de espectadores
             espectadores.remove(handler);
+
+            // Ajustar contador de espectadores por jugador
+            String targetPantalla = spectatorTargets.remove(handler);
+            if ("pantalla1".equals(targetPantalla)) {
+                if (spectatorsPantalla1 > 0) spectatorsPantalla1--;
+            } else if ("pantalla2".equals(targetPantalla)) {
+                if (spectatorsPantalla2 > 0) spectatorsPantalla2--;
+            }
+
             System.out.println("[GameState] Espectador desconectado de " + pantalla);
         }
     }

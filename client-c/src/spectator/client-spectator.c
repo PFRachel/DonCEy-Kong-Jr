@@ -72,8 +72,7 @@ int recvNoBlock(SOCKET sock, char* buf, int size) {
     return n;
 }
 
-// ----- OBSERVER REMOTO: reacciona al JSON -----
-// Ahora recibe también qué pantalla queremos observar ("pantalla1", "pantalla2", ...)
+// ----- OBSERVER REMOTO -----
 void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pantallaIdDestino) {
     // Por defecto, asumimos que NO hay jugador para esa pantalla
     rc->hasPlayer = 0;
@@ -87,7 +86,7 @@ void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pan
 
     const char* pantallaObj = strstr(json, key);
     if (!pantallaObj) {
-        // No se encontró esa pantalla en este STATE → no hay jugador conectado
+        // No se encontró esa pantalla en este STATE entonces no hay jugador conectado
         return;
     }
 
@@ -102,7 +101,6 @@ void updateRenderFromJson(RenderContext* rc, const char* buffer, const char* pan
     if (xPtr) rc->dkjrX = (float)atof(xPtr + 4);
     if (yPtr) rc->dkjrY = (float)atof(yPtr + 4);
 
-    // Si llegamos aquí, sí hay datos de jugador
     rc->hasPlayer = 1;
 }
 
@@ -113,6 +111,9 @@ int main() {
     WSADATA w;
     WSAStartup(MAKEWORD(2,2), &w);
 
+    // Pantalla que se quiere observar inicialmente
+    char pantallaObjetivo[32] = "pantalla1";
+
     SOCKET sock = conectarServidor(IP, PORT);
     if (sock == INVALID_SOCKET) {
         printf("Error conectando a servidor.\n");
@@ -122,14 +123,31 @@ int main() {
     // Registrarse como spectator:
     send(sock, "JOIN_SPECTATOR Spectator\n", 26, 0);
     char ack[64];
-    recv(sock, ack, sizeof(ack)-1, 0);
+    int nAck = recv(sock, ack, sizeof(ack)-1, 0);
+    if (nAck <= 0) {
+        printf("Error recibiendo ACK del servidor.\n");
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
+    ack[nAck] = '\0';
+
+    if (strncmp(ack, "ACK", 3) == 0) {
+        // Formato esperado: "ACK pantalla1" o "ACK pantalla2"
+        char target[32];
+        if (sscanf(ack, "ACK %31s", target) == 1) {
+            strcpy(pantallaObjetivo, target);
+        }
+        printf("[Spectator] Asignado a observar: %s\n", pantallaObjetivo);
+    } else {
+        printf("Servidor no aceptó spectator: %s\n", ack);
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
 
     // Contexto que se actualizará como OBSERVER
     RenderContext rc = {200, 300, 0};
-
-    // Pantalla (jugador) que se quiere observar inicialmente
-    // "pantalla1" -> Jugador 1, "pantalla2" -> Jugador 2
-    char pantallaObjetivo[32] = "pantalla1";
 
     InitWindow(WIDTH, HEIGHT, "Spectator - DonCEy Kong Jr");
     SetTargetFPS(60);
@@ -157,7 +175,6 @@ int main() {
         int n = recvNoBlock(sock, buffer, sizeof(buffer));
         if (n < 0) break;
         if (n > 0 && strstr(buffer, "STATE")) {
-            // ← OBSERVER aquí, ahora filtrando por pantallaObjetivo
             updateRenderFromJson(&rc, buffer, pantallaObjetivo);
         }
 
@@ -170,7 +187,7 @@ int main() {
                  20, 50, 18, RAYWHITE);
 
         if (rc.hasPlayer) {
-            // Hay jugador para esa pantalla → dibujar mono
+            // Hay jugador para esa pantalla, entonces se dibuja mono
             DrawTexture(playerTexture, (int)rc.dkjrX, (int)rc.dkjrY, WHITE);
         } else {
             // No hay jugador conectado para esa pantalla
