@@ -1,19 +1,20 @@
 package logic.factory;
 //La fábrica abstracta
 import domain.entities.GameObject;
-//CREATOR ABSTRACTO.
+import domain.Liana;
+import java.util.List;
 
+//CREATOR OBJETOS.
 public abstract class GameObjectFactory {
 
-    // Para COCODRILOS
-    public GameObject create(String tipo, int liana, float velocidad) {
-        throw new UnsupportedOperationException("create(tipo,liana,velocidad) no implementado");
+    protected List<Liana> lianas;
+    
+    public GameObjectFactory(List<Liana> lianas) {
+        this.lianas = lianas;
     }
 
-    // Para FRUTAS
-    public GameObject create(int liana, float altura, int puntos) {
-        throw new UnsupportedOperationException("create(liana,altura,puntos) no implementado");
-    }
+    public abstract GameObject create();
+    
 }
 
 //Define cómo crean objetos TODAS las fábricas.

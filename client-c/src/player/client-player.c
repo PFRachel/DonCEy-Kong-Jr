@@ -145,6 +145,10 @@ int main() {
                 // No hay datos válidos, NO actualizar nada
                 continue;
             }
+            
+            // Procesar objetos
+            procesarMensajeObjetos(jsonStart, &miJuego, miPantallaId);
+
             // Buscar coordenadas en el JSON
             char key[64];
             sprintf(key, "\"%s\":", miPantallaId);  
@@ -185,10 +189,10 @@ int main() {
         // DIBUJAR
         BeginDrawing();
         // Fondo
-        DrawTexture(fondoTexture, 0, 0, WHITE);
+        
         
         // Renderizar juego 
-        renderizarJuego(&miJuego);
+        renderizarUI(&miJuego);
 
             // Labels
         DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);

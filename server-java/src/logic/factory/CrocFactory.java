@@ -1,26 +1,46 @@
 package logic.factory;
 //fábrica que crea cocodrilos.
 
-import domain.entities.*;
+import java.util.List;
+
+import domain.Liana;
 import domain.entities.BlueCroc;
 import domain.entities.RedCroc;
 import domain.entities.GameObject;
 
-public class CrocFactory extends GameObjectFactory {
+// Factory para crear cocodrilos
+public class CrocFactory extends GameObjectFactory{
+
+    private String tipo;
+    private int lianaId;
+    
+    public CrocFactory(String tipo, int lianaId, List<Liana> lianas) {
+        super(lianas); // Constructor del padre
+        this.tipo = tipo;
+        this.lianaId = lianaId;
+
+        Liana liana = lianas.get(lianaId);
+        float x = liana.getXPosition();
+        float y = liana.getHeadY();
+    }
 
     @Override
-    public GameObject create(String tipo, int liana, float velocidad) {
-
+    public GameObject create() {
+        Liana liana = lianas.get(lianaId);
+        float x = liana.getXPosition();
+        float y = liana.getHeadY();
+        
         switch (tipo.toLowerCase()) {
-            case "rojo":
             case "red":
-                return new RedCroc(liana, velocidad);
+                System.out.println("[CrocFactory] Cocodrilo ROJO creado");
+                return new RedCroc(lianaId, x, y, lianas);
 
-            case "azul":
             case "blue":
-                return new BlueCroc(liana, velocidad);
-        }
+                System.out.println("[CrocFactory] Cocodrilo AZUL creado");
+                return new BlueCroc(lianaId, x, y, lianas);
 
-        throw new IllegalArgumentException("Tipo de cocodrilo no válido: " + tipo);
+            default:
+                throw new IllegalArgumentException("Tipo de cocodrilo no soportado: " + tipo);
+        }
     }
 }

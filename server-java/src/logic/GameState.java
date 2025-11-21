@@ -22,13 +22,13 @@ import net.ClientHandler;
 // -------------------------
 // ABSTRACT FACTORY IMPORTS
 // -------------------------
-import logic.factory.CrocFactory;
-import logic.factory.FruitFactory;
+import logic.factory.FactoryProducer;
 import logic.factory.GameObjectFactory;
 import domain.entities.GameObject;
 
 
 public class GameState {
+    private final Random random = new Random();
     // Cada cliente recibe solo su pantalla (pantalla1, pantalla2…)
     private final Map<String, ClientHandler> pantallas = new HashMap<>();
 
@@ -73,6 +73,8 @@ public class GameState {
         // FALTA AGREGAR MAS
         // PLATAFORMA BASE-PARA QUE VEAS COMO TIENE Q SER
         plataformas.add(new Plataforma(20, 750, 100, 20));
+        //adminSpawnCroc("ADMIN_SPAWN_CROC blue 0 50 pantalla2");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 150 40 pantalla1");
     }
 
     // -----------------------
@@ -211,17 +213,22 @@ public class GameState {
         }
 
         String tipo = p[1];
-        int liana = Integer.parseInt(p[2]);
-        float vel = Float.parseFloat(p[3]);
+        int liana = Integer.parseInt(p[2]); // Usar liana, no x,y random
         String pantalla = p[4];
+        try {
+            GameObjectFactory factory = FactoryProducer.getCrocFactory(tipo, liana, lianas);
+            GameObject croc = factory.create();
+            croc.setPantallaDisplay(pantalla);
+            objetos.add(croc);
+            
+            System.out.println("[TEST] Objetos creados:");
+            for (GameObject obj : objetos) {
+                System.out.println(obj.toJson());
+            }
 
-        GameObjectFactory factory = new CrocFactory();
-        GameObject croc = factory.create(tipo, liana, vel);
-
-        croc.setPantallaObjetivo(pantalla);
-        objetos.add(croc);
-
-        System.out.println("[ADMIN] Cocodrilo creado en " + pantalla);
+        } catch (Exception e) {
+            System.err.println("✗ ERROR al crear cocodrilo: " + e.getMessage() + "\n");
+        }
     }
 
      // Ejemplo: ADMIN_SPAWN_FRUIT 2 70 300 pantalla1
@@ -238,10 +245,9 @@ public class GameState {
         int puntos = Integer.parseInt(p[3]);
         String pantalla = p[4];
 
-        GameObjectFactory factory = new FruitFactory();
-        GameObject fruit = factory.create(liana, altura, puntos);
-
-        fruit.setPantallaObjetivo(pantalla);
+        GameObjectFactory factory = FactoryProducer.getFruitFactory(liana, altura, puntos, lianas);
+        GameObject fruit = factory.create(); 
+        fruit.setPantallaDisplay(pantalla);
         objetos.add(fruit);
 
         System.out.println("[ADMIN] Fruta creada en " + pantalla);
@@ -258,10 +264,9 @@ public class GameState {
         String pantalla = p[3];
 
         objetos.removeIf(o ->
-                o.getTipo().equals("FRUTA") &&
                 o.getLiana() == liana &&
                 Math.abs(o.getAltura() - altura) < 1e-3 &&
-                pantalla.equals(o.getPantallaObjetivo())
+                pantalla.equals(o.getPantallaDisplay())
         );
 
         System.out.println("[ADMIN] Fruta eliminada de " + pantalla);
@@ -277,7 +282,7 @@ public class GameState {
             processInput(msg, dt);
         }
         // 2. Actualizar objetos Abstract Factory
-        for (GameObject obj : objetos) obj.update(dt * velocidadFactor);
+        //for (GameObject obj : objetos) obj.update(dt * velocidadFactor);
 
         // 2) mover cocodrilos
         //for (Croc c : crocs) c.update(dt * velocidadFactor);

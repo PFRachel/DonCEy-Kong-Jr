@@ -46,6 +46,8 @@ void inicializarJugador(Player* jugador);
 
 // ==================== Actualización ====================
 void actualizarAnimacionJugador(Player* jugador);
+int procesarMensajeObjetos(const char* mensaje, GameState* estado, const char* miPantallaId);
+void actualizarElementos(GameState* estado, const char* json, const char* miPantallaId);
 
 // ==================== Colisión ====================
 bool colisionCocodrilo(const Player* jugador, const Cocodrilo* cocodrilo);

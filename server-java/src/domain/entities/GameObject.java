@@ -7,51 +7,42 @@ package domain.entities;
  * mediante Abstract Factory (cocodrilos, frutas, etc).
  */
 public abstract class GameObject {
-
-    protected String tipo;              // "ROJO", "AZUL", "FRUTA"
-    protected int liana;                // número de la liana
-    protected float altura;             // posición vertical
-    protected float velocidad;          // velocidad para crocs
-    protected String pantallaObjetivo;  // pantalla1, pantalla2 ...
-
-    public GameObject(String tipo, int liana, float altura, float velocidad) {
-        this.tipo = tipo;
-        this.liana = liana;
-        this.altura = altura;
-        this.velocidad = velocidad;
-    }
-
-    // -----------------------------
-    // GETTERS Y SETTERS NECESARIOS
-    // -----------------------------
-    public String getTipo() {
-        return tipo;
-    }
-
-    public int getLiana() {
-        return liana;
-    }
-
-    public float getAltura() {
-        return altura;
-    }
-
-    public void setPantallaObjetivo(String p) {
-        this.pantallaObjetivo = p;
-    }
-
-    public String getPantallaObjetivo() {
-        return pantallaObjetivo;
-    }
-
-    // -----------------------------
-    // MÉTODO ABSTRACTO UPDATE
-    // -----------------------------
-    public abstract void update(float dt);
+    protected String pantallaDisplay;
+    protected int liana;
+    protected float x, y;
 
     // -----------------------------
     // JSON PARA ENVIAR AL CLIENTE
     // -----------------------------
-    public abstract String toJson();
+     public abstract String toJson();
+
+    // -----------------------------
+    // INDICE DEL LIANA DONDE ESTA EL OBJETO
+    // -----------------------------
+    public int getLiana() { return liana; }
+
+    // -----------------------------
+    // ALTURA EN LA LIANA
+    // -----------------------------
+    public float getAltura() { return y; }
+
+    // -----------------------------
+    // CUAL CLIENTE
+    // -----------------------------
+    public String getPantallaDisplay() { return pantallaDisplay; }
+
+    // -----------------------------
+    // DIFINIR CLIENTE
+    // -----------------------------
+    public void setPantallaDisplay(String pantalla) { this.pantallaDisplay = pantalla; }
+
+    public void setPosition(float x, float y) { 
+        this.x = x; 
+        this.y = y; 
+    }
+
+    // Métodos solo para crocs
+    public void mover(float deltaTime) {} // Movimiento
+    public void update(float factor) {} // Aumentar vel
 }
 

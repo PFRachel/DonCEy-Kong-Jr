@@ -1,15 +1,18 @@
 package logic.factory;
+
+import domain.Liana;
+import java.util.List;
+
 //El creador de fábricas.
 public class FactoryProducer {
 
-    public static GameObjectFactory getFactory(String type) {
+            // Para cocodrilos
+    public static GameObjectFactory getCrocFactory(String tipo, int lianaId, List<Liana> lianas) {
+        return new CrocFactory(tipo, lianaId, lianas);
+    }
 
-        switch (type.toLowerCase()) {
-            case "crocodrilo":
-            case "cocodrilo": return new CrocFactory();
-            case "fruta":     return new FruitFactory();
-        }//la parte “Abstract Factory → Produce Factories”
-
-        throw new IllegalArgumentException("Tipo fábrica no reconocido");
+     // Para frutas
+    public static GameObjectFactory getFruitFactory(int lianaId, float altura, int puntos, List<Liana> lianas) {
+        return new FruitFactory(lianas, lianaId, altura, puntos);
     }
 }
