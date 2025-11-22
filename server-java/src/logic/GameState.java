@@ -11,6 +11,7 @@
  */
 package logic;
 
+import domain.DKJr;
 import domain.Liana;
 import domain.Plataforma;
 import domain.Player;
@@ -26,7 +27,6 @@ import logic.factory.FactoryProducer;
 import logic.factory.GameObjectFactory;
 import domain.entities.BlueCroc;
 import domain.entities.GameObject;
-import domain.entities.RedCroc;
 
 
 public class GameState {
@@ -64,41 +64,55 @@ public class GameState {
     private int spectatorsPantalla2 = 0;
 
     public GameState() {
-        // Configuración inicial del mapa (6 lianas)
-        lianas.add(new Liana(0, 30, 260, 650));
-        lianas.add(new Liana(1, 100, 260, 610));
-        lianas.add(new Liana(2, 200, 440, 655));
-        lianas.add(new Liana(3, 280, 250, 500));
-        lianas.add(new Liana(4, 350, 250, 430));
+        // Configuración inicial del mapa
+        // Agregar lianas soloes estas priemras 5 estan bien 
+        lianas.add(new Liana(0, 30, 260, 650));// Extremo izquierdo
+        lianas.add(new Liana(1, 100, 260, 610));// Segunda desde izquierda
+        lianas.add(new Liana(2, 200, 440, 655));// Debajo plataforma media-izquierda
+        lianas.add(new Liana(3, 350, 250, 590));// Centro-izquierda
+        lianas.add(new Liana(4, 500, 250, 430));
+        //lianas.add(new Liana(5, 500, 340, 500)); // extra
+        lianas.add(new Liana(5, 570, 340, 530));
+        lianas.add(new Liana(6, 640, 340, 480));  // Penúltima
+        lianas.add(new Liana(7, 720, 190, 580));  // Última del fondo
+        lianas.add(new Liana(8, 760, 190, 580));
+        
+        // ===== PLATAFORMAS =====
+        plataformas.add(new Plataforma(20, 720, 120, 30)); //Plataforma principal inicio
+        plataformas.add(new Plataforma(348, 670, 10, 10));// Isla verde 1
+        plataformas.add(new Plataforma(493, 705,  10, 10));// Isla verde 2
+        plataformas.add(new Plataforma(610, 670, 10, 10));// Isla verde 3
+        plataformas.add(new Plataforma(756, 640, 10, 10));// Isla verde 4
 
-        // AJUSTAR POSICION
-        lianas.add(new Liana(5, 500, 120, 650));
-        lianas.add(new Liana(6, 600, 400, 600));
-        lianas.add(new Liana(7, 700, 50, 400));
-        lianas.add(new Liana(8, 750, 120, 650));
-    
-        // Agregar plataformas
-        // FALTA AGREGAR MAS
-        plataformas.add(new Plataforma(20, 750, 100, 20));
-
+        
+        plataformas.add(new Plataforma(173, 350, 10, 18));// Plataforma más alta de las dos del centro
+        plataformas.add(new Plataforma(178, 500, 40, 10)); // Plataforma izquierda inferior
+        plataformas.add(new Plataforma(697, 430, 90, 10));// Plataforma central derecha
+        plataformas.add(new Plataforma(522, 233, 10, 10));// desnivel hacia la derecha
+        plataformas.add(new Plataforma(260, 117,  88, 25));// Plataforma pequeña sobre Mario
+        plataformas.add(new Plataforma(0,   204, 552, 26));// Plataforma grande superior
         // Elementos de Default, fijos
         // Croc(tipo, lianaId, pantallaDisplay)
         adminSpawnCroc("ADMIN_SPAWN_CROC red 0 pantalla1");
         // Fruit(lianaId, altura, puntos, pantallaDisplay)
         adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla1");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 10 40 pantalla1");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla1");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla1");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 10 40 pantalla1");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
 
         adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla2");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 10 40 pantalla2");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla2");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 6 10 40 pantalla2");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla2");
         adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla2");
     }
 
     // -----------------------
     // MÉTODOS DE REGISTRO (red)
     // -----------------------
+    /**
+     * Intenta registrar un nuevo jugador.
+     * @return true si se registró, false si ya hay 2 jugadores.
+     */
     public synchronized boolean addPlayer(String nick, ClientHandler handler) {
 
         if (jugadores.size() >= MAX_JUGADORES) {
@@ -444,7 +458,24 @@ public class GameState {
           //  if (i>0) sb.append(",");
            // sb.append(fruits.get(i).toJson());
         //}
-        sb.append("]}");
+        
+        sb.append(",\"plataformas\":[");
+        for (int i = 0; i < plataformas.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(plataformas.get(i).toJson());
+        }
+        sb.append("]");
+
+        //for (int i = 0; i < crocs.size(); i++) {
+        //  if (i>0) sb.append(",");
+        //  sb.append(crocs.get(i).toJson());
+        //}
+        //sb.append("],\"fruits\":[");
+        //for (int i = 0; i < fruits.size(); i++) {
+        //  if (i>0) sb.append(",");
+        //  sb.append(fruits.get(i).toJson());
+        //}
+        sb.append("}");
         return sb.toString();
     }
 }
