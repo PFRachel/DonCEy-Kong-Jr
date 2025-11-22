@@ -28,8 +28,9 @@ public class FruitFactory extends GameObjectFactory {
         }
 
         float x = useLiana.getXPosition();
-        float y = useLiana.getHeadY() + (altura / 100.0f) * (useLiana.getBottomY() - useLiana.getHeadY());
-        
+        // Rango de altura en la liana 0-100
+        float rangoY = useLiana.getBottomY() - useLiana.getHeadY();
+        float y = useLiana.getHeadY() + (altura / 100.0f) * rangoY;
         return new Fruit(lianaId, x, y, puntos, lianas);
     }
 }

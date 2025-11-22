@@ -24,7 +24,9 @@ import net.ClientHandler;
 // -------------------------
 import logic.factory.FactoryProducer;
 import logic.factory.GameObjectFactory;
+import domain.entities.BlueCroc;
 import domain.entities.GameObject;
+import domain.entities.RedCroc;
 
 
 public class GameState {
@@ -49,6 +51,12 @@ public class GameState {
     private final ConcurrentLinkedQueue<String> inputQueue = new ConcurrentLinkedQueue<>();
     private float velocidadFactor = 1.0f;
     private long tick = 0;
+    private int level = 1;  // nivel inicial
+
+    // para autospawn de cocodrulos
+    private float crocTimer = 0f;   // tiempo acumulado
+    private float crocIntervalo = 3.0f;  // crear uno cada 3s
+    private int maxCroc = 6; // maximo de crocs
 
     // Espectadores por jugador (pantalla1 / pantalla2)
     private final Map<ClientHandler, String> spectatorTargets = new HashMap<>();
@@ -71,10 +79,21 @@ public class GameState {
     
         // Agregar plataformas
         // FALTA AGREGAR MAS
-        // PLATAFORMA BASE-PARA QUE VEAS COMO TIENE Q SER
         plataformas.add(new Plataforma(20, 750, 100, 20));
-        //adminSpawnCroc("ADMIN_SPAWN_CROC blue 0 50 pantalla2");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 150 40 pantalla1");
+
+        // Elementos de Default, fijos
+        // Croc(tipo, lianaId, pantallaDisplay)
+        adminSpawnCroc("ADMIN_SPAWN_CROC red 0 pantalla1");
+        // Fruit(lianaId, altura, puntos, pantallaDisplay)
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla1");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 10 40 pantalla1");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla1");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla1");
+
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla2");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 10 40 pantalla2");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla2");
+        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla2");
     }
 
     // -----------------------
@@ -200,6 +219,17 @@ public class GameState {
         }
     }
 
+    // Contar cant de crocs
+    private int contarCroc(String pantalla) {
+    int count = 0;
+    for (GameObject o : objetos) {
+        if (o instanceof BlueCroc && pantalla.equals(o.getPantallaDisplay())) {
+            count++;
+        }
+    }
+        return count;
+    }   
+
     // COMANDOS DEL ADMIN: ABSTRACT FACTORY
     // ==========================================================
 
@@ -207,14 +237,14 @@ public class GameState {
     // Ejemplo: ADMIN_SPAWN_CROC rojo 3 1.5 pantalla2
     public void adminSpawnCroc(String msg) {
         String[] p = msg.split("\\s+");
-        if (p.length < 5) {
+        if (p.length < 4) {
             System.out.println("[ADMIN] Formato inválido: ADMIN_SPAWN_CROC tipo liana vel pantalla");
             return;
         }
 
         String tipo = p[1];
-        int liana = Integer.parseInt(p[2]); // Usar liana, no x,y random
-        String pantalla = p[4];
+        int liana = Integer.parseInt(p[2]);
+        String pantalla = p[3];
         try {
             GameObjectFactory factory = FactoryProducer.getCrocFactory(tipo, liana, lianas);
             GameObject croc = factory.create();
@@ -281,19 +311,78 @@ public class GameState {
         while ((msg = inputQueue.poll()) != null) {
             processInput(msg, dt);
         }
-        // 2. Actualizar objetos Abstract Factory
-        //for (GameObject obj : objetos) obj.update(dt * velocidadFactor);
 
-        // 2) mover cocodrilos
-        //for (Croc c : crocs) c.update(dt * velocidadFactor);
+         // 2) mover cocodrilos
+        Iterator<GameObject> it = objetos.iterator();
+        while (it.hasNext()) {
+            GameObject obj = it.next();
 
-        // 3) colisiones (simplificado)
-        // ... detectar y actualizar vidas/puntaje
+            // Llamar metodo mover dentro de cada objeto
+            obj.mover(dt * velocidadFactor);
 
-        // 4) reglas de rescate → subir dificultad
-        // if (rescato) { dkjr.vidas++; velocidadFactor *= 1.10f; reiniciarNivel(); }
+            // Eliminar croc si llega abajo
+            if (obj instanceof BlueCroc croc) {
+                if (croc.getAltura() >= 100) {
+                    it.remove();
+                    continue;
+                }
+            }
+        }
+            crocTimer += dt;
+            if (crocTimer >= crocIntervalo) {
+                crocTimer = 0;
+
+                autoSpawnCroc();
+            }
+                    
+            // 2. Actualizar objetos Abstract Factory
+            //for (GameObject obj : objetos) obj.update(dt * velocidadFactor);
+
+        
+            //for (Croc c : crocs) c.update(dt * velocidadFactor);
+
+            // 3) colisiones (simplificado)
+            // ... detectar y actualizar vidas/puntaje
+
+            // 4) reglas de rescate → subir dificultad
+            // if (rescato) { dkjr.vidas++; velocidadFactor *= 1.10f; reiniciarNivel(); }
+
+        }
+
+    // Funcion para dirigir spawn automatico de cocodrilos en x pantalla
+    private void autoSpawnCroc() {
+
+        // Ajustar tiempo de spawn por nivel
+        crocIntervalo = Math.max(0.6f, 2.0f / level);
+
+         // pantalla 1
+        if (pantallas.containsKey("pantalla1") && contarCroc("pantalla1") < maxCroc) {
+            spawnBlueCroc("pantalla1");
+        }
+
+        // pantalla 2
+        if (pantallas.containsKey("pantalla2") && contarCroc("pantalla2") < maxCroc) {
+            spawnBlueCroc("pantalla2");
+        }
     }
 
+    // Crear cocodrilo
+    private void spawnBlueCroc(String pantalla) {
+        // calcular liana random
+        int lianaId = random.nextInt(lianas.size());
+
+        // Crear cocodrilo azul
+        GameObjectFactory f = FactoryProducer.getCrocFactory("blue", lianaId, lianas);
+        GameObject croc = f.create();
+
+        // Asignar pantalla
+        croc.setPantallaDisplay(pantalla);
+        
+        // Agregar al arreglo
+        objetos.add(croc);
+        System.out.println("[SPAWN1] BlueCroc → " + pantalla + " (Liana " + lianaId + ")");
+    }
+    
     private void processInput(String msg, float dt) {
         try {
             // Formato: "INPUT <tick> <up> <down> <left> <right> <jump> <pantallaId>"

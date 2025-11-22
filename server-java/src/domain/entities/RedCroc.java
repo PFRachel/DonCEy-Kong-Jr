@@ -51,7 +51,7 @@ public class RedCroc extends  GameObject {
     
     @Override
     public float getAltura() {
-        return y;
+        return altura;
     }
 
     @Override

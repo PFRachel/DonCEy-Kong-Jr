@@ -16,7 +16,7 @@ public class BlueCroc extends  GameObject {
         this.x = x;
         this.y = y;
         this.lianas = lianas;
-        this.altura = 0; // Empieza abajo
+        this.altura = 0; // Empieza arriba
         this.vel = 30f;
         calcPos();
     }
@@ -24,7 +24,7 @@ public class BlueCroc extends  GameObject {
     @Override
     public void mover(float deltaTime) {
         // Movimiento descendente
-        altura -= vel * deltaTime;
+        altura += vel * deltaTime;
         calcPos();
     }
 
@@ -58,7 +58,7 @@ public class BlueCroc extends  GameObject {
 
     @Override
     public float getAltura() {
-        return 0f;
+        return altura;
     }    
     
     private void calcPos() {

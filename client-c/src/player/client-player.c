@@ -196,7 +196,7 @@ int main() {
 
             // Labels
         DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);
-        DrawText("JUGADOR:", 250, 120, 25, WHITE);
+        DrawText("JUGADOR:", 400, 150, 25, WHITE);
         DrawText(TextFormat("%d", miJuego.player.score), 50, 180, 20, YELLOW);
         EndDrawing();
     }

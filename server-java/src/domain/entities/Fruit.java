@@ -7,7 +7,7 @@ import domain.Liana;
 public class Fruit extends  GameObject {
 //fruta con puntos 
     private float altura;
-    private int puntos;
+    private final int puntos;
     private boolean recogido = false;
 
     public Fruit(int lianaId, float x, float y, int puntos, List<Liana> lianas) {

@@ -109,44 +109,66 @@ void actualizarElementos(GameState* estado, const char* json, const char* miPant
     if (!objetos_end) {
         return;
     }
+    // Copiar el contenido del array
+    int len = objetos_end - objetos_start;
+    char* objetos_str = (char*)malloc(len + 1);
+    if (!objetos_str) return;
 
-    // Copiar temporalmente el array de objetos
-    int objetos_len = objetos_end - objetos_start;
-    char objetos_str[1024];
-    strncpy(objetos_str, objetos_start, objetos_len);
-    objetos_str[objetos_len] = '\0';
+    strncpy(objetos_str, objetos_start, len);
+    objetos_str[len] = '\0';
 
-    int obj_count = 0;
-    int frutas_creadas = 0;
-    int cocodrilos_creados = 0;
-    char* obj_token = strtok(objetos_str, "{");
+    int frutaIndex = 0;
+    int crocIndex = 0;
+    
+    char* objectActual = objetos_str;
 
-    while (obj_token && obj_count < 10) {
+    while (*objectActual) {
+        // Buscar inicio de objeto
+        char* obj_start = strchr(objectActual, '{');
+        if (!obj_start) break;
+
+        // Buscar fin de objeto
+        char* obj_end = strchr(obj_start + 1, '}');
+        if (!obj_end) break;
+        
+        // Extraer objeto individual
+        int obj_len = obj_end - obj_start + 1;
+        char obj_buffer[512];
+        if (obj_len >= sizeof(obj_buffer)) {
+            objectActual = obj_end + 1;
+            continue;
+        }
+
+        strncpy(obj_buffer, obj_start, obj_len);
+        obj_buffer[obj_len] = '\0';
+
         char tipo[32] = "";
         char pantalla[32] = "";
-        int liana = -1;
-        float altura = 0.0f;
         float x = 0, y = 0;
 
         // Extraer tipo
-        char* tipo_start = strstr(obj_token, "\"tipo\":\"");
+        char* tipo_start = strstr(obj_buffer, "\"tipo\":\"");
         if (tipo_start) {
-            tipo_start += strlen("\"tipo\":\"");
-            sscanf(tipo_start, "%31[^\"]", tipo);
+            tipo_start += 8; // strlen("\"tipo\":\"")
+            int i = 0;
+            sscanf(tipo_start,"%31[^\"]", tipo );
         }
 
         // Extraer x
-        char* x_start = strstr(obj_token, "\"x\":");
-        if (x_start) sscanf(x_start, "\"x\":%f", &x);
+        char* x_start = strstr(obj_buffer, "\"x\":");
+        if (x_start) {
+            sscanf(x_start + 4, "%f", &x);
+        }
 
         // Extraer y
-        char* y_start = strstr(obj_token, "\"y\":");
-        if (y_start) sscanf(y_start, "\"y\":%f", &y);
-
+        char* y_start = strstr(obj_buffer, "\"y\":");
+        if (y_start) {
+            sscanf(y_start + 4, "%f", &y);
+        }
         // Extraer pantalla
-        char* p_start = strstr(obj_token, "\"pantalla\":\"");
+        char* p_start = strstr(obj_buffer, "\"pantalla\":\"");
         if (p_start) {
-            p_start += strlen("\"pantalla\":\"");
+            p_start += 12; 
             sscanf(p_start, "%31[^\"]", pantalla);
         }
 
@@ -154,46 +176,40 @@ void actualizarElementos(GameState* estado, const char* json, const char* miPant
         if (strcmp(pantalla, miPantallaId) == 0) {
             if (strcmp(tipo,"rojo")==0 || strcmp(tipo,"azul")==0 ) {
                 // Cocodrilo
-                for(int i=0;i<MAX_COCODRILOS;i++) {
-                    if (!estado->cocodrilos[i].active) {
-                        estado->cocodrilos[i].position = (Vector2){x, y};
-                        estado->cocodrilos[i].type = (strcmp(tipo,"red")==0) ? 0 : 1;
-                        estado->cocodrilos[i].active = true;
-                        printf("Cocodrilo %s creado en (%.1f, %.1f)\n", tipo, x, y);
-                        //estado->cocodrilos[i].texture = strcmp(tipo,"red")==0 ? cocodriloRojoTexture : cocodriloAzulTexture;
-                        break;
-                    }
+                if (crocIndex < MAX_COCODRILOS) {
+                    estado->cocodrilos[crocIndex].position = (Vector2){x, y};
+                    estado->cocodrilos[crocIndex].type = (strcmp(tipo,"rojo")==0) ? 0 : 1;
+                    estado->cocodrilos[crocIndex].active = true;
+                    printf("Cocodrilo %s creado en (%.1f, %.1f)\n", tipo, x, y);
+                    //estado->cocodrilos[i].texture = strcmp(tipo,"red")==0 ? cocodriloRojoTexture : cocodriloAzulTexture;
+                    crocIndex++;
                 }
-                } else {
-                // Fruta
-                for(int i=0;i<MAX_FRUTAS;i++) {
-                    if (!estado->frutas[i].active) {
-                        estado->frutas[i].position = (Vector2){x, y};
-                        estado->frutas[i].active = true;
-                        //estado->frutas[i].texture = frutaTexture;
-                        break;
-                    }
+                } else if (frutaIndex < MAX_FRUTAS) {
+                    // Fruta
+                    estado->frutas[frutaIndex].position.x = x;
+                    estado->frutas[frutaIndex].position.y = y;
+                    estado->frutas[frutaIndex].active = true;
+                    //estado->frutas[frutaIndex].points = puntos;
+
+                    frutaIndex++;
                 }
             }
+            // Avanzar al siguiente objeto
+            objectActual = obj_end + 1;
         }
-        obj_token = strtok(NULL, "},");
+        free(objetos_str);
     }
-
-}
 
 // Función para separar json y extraer objetos
 int procesarMensajeObjetos(const char* mensaje, GameState* estado, const char* miPantallaId) {
-    // Verificar si es un mensaje STATE (formato JSON)
-    if (strstr(mensaje, "STATE ") != NULL) {
-        // Extraer el JSON después de "STATE "
-        char* jsonStart = strstr(mensaje, "STATE ");
-        if (jsonStart) {
-            jsonStart += 6; // Saltar "STATE "
-            actualizarElementos(estado, jsonStart, miPantallaId);
-            return 0;
-        }
+    char* jsonStart = strstr(mensaje, "STATE ");
+    if (jsonStart) {
+        jsonStart += 6; // Saltar "STATE "
+        actualizarElementos(estado, jsonStart, miPantallaId);
+        return 0;
     }
-    return -1;
+    actualizarElementos(estado, mensaje, miPantallaId);
+    return 0;
 }
         
 int registrarJugador(SOCKET sock, const char* nombre){
@@ -269,6 +285,8 @@ void cargarTexturas(void) {
     fruta1Texture = LoadTexture("client-c/image/fruta1.png");
     fruta2Texture = LoadTexture("client-c/image/fruta2.png");
     fruta3Texture = LoadTexture("client-c/image/fruta3.png");
+    cocodriloAzulTexture  = LoadTexture("client-c/image/BlueCroc.png");
+    cocodriloRojoTexture  = LoadTexture("client-c/image/RedCroc.png");
 }
 
 void descargarTexturas(void) {
@@ -277,6 +295,8 @@ void descargarTexturas(void) {
     UnloadTexture(fruta1Texture);
     UnloadTexture(fruta2Texture);
     UnloadTexture(fruta3Texture);
+    UnloadTexture(cocodriloAzulTexture);
+    UnloadTexture(cocodriloRojoTexture);
 }
 
 // ==================== Renderizado ====================
@@ -288,32 +308,37 @@ void renderizarJugador(const Player* jugador){
     DrawTextureEx(playerTexture, jugador->position, 0.0f, 1.0f, WHITE);
 }
 
-void renderizarCocodrilos(const Cocodrilo cocodrilos[], int count){}
+void renderizarCocodrilos(const Cocodrilo cocodrilos[], int count){
+    for (int i = 0; i < count; i++) {
+        if (cocodrilos[i].active) {
+            Vector2 pos = cocodrilos[i].position;
+            Texture2D tex = (cocodrilos[i].type == 0) ? cocodriloRojoTexture : cocodriloAzulTexture;
+            DrawTextureEx(tex, pos, 0.0f, 1.0f, WHITE);
+        }
+    }
+}
 void renderizarFrutas(const Fruta frutas[], int count){
     for (int i = 0; i < count; i++) {
         if (frutas[i].active) {
+            Vector2 pos = frutas[i].position;
             // Rotar entre las 3 texturas de frutas basado en el índice
             Texture2D fruitTex;
             switch (i % 3) {
-                case 0: fruitTex = fruta2Texture; break;
+                case 0: fruitTex = fruta1Texture; break;
                 case 1: fruitTex = fruta2Texture; break;
                 case 2: fruitTex = fruta3Texture; break;
                 default: fruitTex = fruta1Texture;
             }
             if (fruitTex.id != 0) {
-                DrawTextureEx(fruitTex, frutas[i].position, 0.0f, 1.0f, WHITE);
-            } else {
-                // Fallback si no hay textura
-                DrawCircle(frutas[i].position.x + 15, frutas[i].position.y + 15, 15, GREEN);
-            //DrawTextureEx(fruitTex, frutas[i].position, 0.0f, 1.0f, WHITE);
-            }
+                DrawTextureEx(fruitTex, pos, 0.0f, 1.0f, WHITE);
+            } 
         }
     }
 }
 void renderizarUI(const GameState* instancia){
     DrawTexture(fondoTexture, 0, 0, WHITE);
     DrawTextureEx(instancia->player.texture, instancia->player.position, 0.0f, 1.0f, WHITE);
-    //renderizarCocodrilos(instancia->cocodrilos, MAX_COCODRILOS);
+    renderizarCocodrilos(instancia->cocodrilos, MAX_COCODRILOS);
     renderizarFrutas(instancia->frutas, MAX_FRUTAS);
     //renderizarJugador(&instancia->player);
 }
