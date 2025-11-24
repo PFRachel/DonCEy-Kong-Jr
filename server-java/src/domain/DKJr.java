@@ -43,7 +43,8 @@ public class DKJr {
     // Lista de plataformas
     private final List<Plataforma> plataformas;
     private boolean onPlatform = false;
-    
+
+    private boolean hasFallen = false;  
 
     private final float minX = 0, maxX = 830;
     private final float minY = 0, maxY = 870;
@@ -61,6 +62,13 @@ public class DKJr {
     public boolean isJumping() { return isJumping; }
     //public boolean isAlive() { return isAlive; }
     
+    public boolean hasFallen() {
+        return hasFallen;
+    }
+
+    public void clearFallen() {
+        hasFallen = false;
+    }
     // Posicion inicial
     public void setPosition(float x, float y) {
         this.x = x;
@@ -192,14 +200,16 @@ public class DKJr {
         if (x < minX) x = minX;
         if (x > maxX) x = maxX;
         
-        // Colisión con el suelo
+        // Limite superior
         if (y < minY) {
             y = minY;
             velocityY = 0;
         }
+        // Limite inferior
         if (y > maxY) {
             y = maxY;
             velocityY = 0;
+            hasFallen = true;
         }
     }
 
@@ -213,6 +223,7 @@ public class DKJr {
         this.currentLiana = null;
         this.isJumping = false;
         this.onPlatform = false;
+        this.hasFallen = false;
     }
 
     public String toJson() {

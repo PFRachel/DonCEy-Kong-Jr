@@ -9,17 +9,6 @@
  *      recibidas de los clientes.
  * ---------------------------------------------------------------
  */
-/**
- * ---------------------------------------------------------------
- *  Nombre del archivo: GameState.java
- *  Paquete: logic
- *  Descripción:
- *      Mantiene el estado global del juego, incluyendo jugadores,
- *      espectadores y entidades del mundo (frutas, cocodrilos, etc.).
- *      Provee métodos para modificar el estado según las acciones
- *      recibidas de los clientes.
- * ---------------------------------------------------------------
- */
 package logic;
 
 import domain.DKJr;
@@ -100,9 +89,9 @@ public class GameState {
         plataformas.add(new Plataforma(173, 350, 10, 18));// Plataforma más alta de las dos del centro
         plataformas.add(new Plataforma(178, 500, 40, 10)); // Plataforma izquierda inferior
         plataformas.add(new Plataforma(697, 430, 90, 10));// Plataforma central derecha
-        plataformas.add(new Plataforma(522, 233, 10, 10));// desnivel hacia la derecha
-        plataformas.add(new Plataforma(260, 117,  88, 25));// Plataforma pequeña sobre Mario
-        plataformas.add(new Plataforma(0,   204, 552, 26));// Plataforma grande superior
+        plataformas.add(new Plataforma(522, 185, 10, 10));// desnivel hacia la derecha
+        plataformas.add(new Plataforma(260, 117,  40, 5));// Plataforma pequeña sobre Mario
+        plataformas.add(new Plataforma(0,   175, 500, 10));// Plataforma grande superior
         // Elementos de Default, fijos
         // Croc(tipo, lianaId, pantallaDisplay)
         adminSpawnCroc("ADMIN_SPAWN_CROC red 0 pantalla1");
@@ -499,6 +488,14 @@ public class GameState {
             //Posicion del mono
             float mx = mono.getX();
             float my = mono.getY();
+
+            //Detectar caída
+            if (mono.hasFallen()) {
+                player.killPlayer();
+                System.out.println("[CAIDA] Jugador " + player.getPlayerId() + " murió por caída");
+                mono.clearFallen();
+                continue;
+            }
 
             Iterator<GameObject> it = objetos.iterator();
 
