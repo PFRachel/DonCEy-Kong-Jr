@@ -62,8 +62,8 @@ public class Player {
     }
 
     public String toJson() {
-        return String.format("{\"id\":%d,\"score\":%d,\"lives\":%d,%s}",
-        playerId, score, lives, personaje.toJson() 
+        return String.format("{\"id\":%d,\"score\":%d,\"lives\":%d,\"level\":%d,%s}",
+        playerId, score, lives, level, personaje.toJson() 
     );
 }
 

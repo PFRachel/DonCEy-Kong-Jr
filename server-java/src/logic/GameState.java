@@ -434,6 +434,7 @@ public class GameState {
         // Subir nivel lógico
         level++;
         p.nextLevel();
+        p.chanceLives(1);
 
         // Aumentar velocidad global
         velocidadFactor *= 1.20f;
