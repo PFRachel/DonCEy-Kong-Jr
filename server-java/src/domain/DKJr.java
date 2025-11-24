@@ -19,8 +19,12 @@ package domain;
 import java.util.List;
 
 public class DKJr {
-    private float x = 100;
-    private float y = 700;
+    // Posición inicial
+    private final float startX = 100;
+    private final float startY = 700;
+    //Pos actual
+    private float x = startX;
+    private float y = startY;
     private float velocityX = 0;
     private float velocityY = 0;
     private final float gravity = 500f;
@@ -197,6 +201,18 @@ public class DKJr {
             y = maxY;
             velocityY = 0;
         }
+    }
+
+    // Posicion inicial 
+    public void resetPos() {
+        this.x = startX;
+        this.y = startY;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.onLiana = false;
+        this.currentLiana = null;
+        this.isJumping = false;
+        this.onPlatform = false;
     }
 
     public String toJson() {

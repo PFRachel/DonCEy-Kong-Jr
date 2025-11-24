@@ -96,6 +96,7 @@ int main() {
     // Iniciar Ventana
     InitWindow(WIDTH, HEIGHT, "Donkey Kong Jr - Player");
     SetTargetFPS(60);
+    printf("Ventana inicializada: %dx%d\n", WIDTH, HEIGHT);
 
     // Cargar recursos
     cargarTexturas();
@@ -155,6 +156,14 @@ int main() {
 
             char* pantalla_obj = strstr(jsonStart, key);
             if (pantalla_obj) {
+                char* id_pos = strstr(pantalla_obj, "\"id\":");
+                char* score_pos = strstr(pantalla_obj, "\"score\":");
+                char* lives_pos = strstr(pantalla_obj, "\"lives\":");
+                char* level_pos = strstr(pantalla_obj, "\"level\":");
+                if (id_pos) sscanf(id_pos, "\"id\":%d", &miJuego.player.id);
+                if (score_pos) sscanf(score_pos, "\"score\":%d", &miJuego.player.score);
+                if (lives_pos) sscanf(lives_pos, "\"lives\":%d", &miJuego.player.lives);
+                if (level_pos) sscanf(level_pos, "\"level\":%d", &miJuego.player.level);
                 // Buscar x y y SOLO dentro de su propio objeto
                 char* x_pos = strstr(pantalla_obj, "\"x\":");
                 char* y_pos = strstr(pantalla_obj, "\"y\":");
@@ -196,8 +205,17 @@ int main() {
 
             // Labels
         DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);
-        DrawText("JUGADOR:", 400, 150, 25, WHITE);
-        DrawText(TextFormat("%d", miJuego.player.score), 50, 180, 20, YELLOW);
+        DrawText("JUGADOR:", 50, 150, 20, WHITE);
+        DrawText(TextFormat("%s", miPantallaId), 150, 150, 20, WHITE);
+
+        DrawText("PUNTOS:", 50, 180, 20, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.score), 150, 180, 20, YELLOW);
+
+        DrawText("VIDAS:", 50, 210, 20, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.lives), 150, 210, 20, RED);
+
+        DrawText("NIVEL:", 50, 240, 20, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.level), 150, 240, 20, GREEN);
         EndDrawing();
     }
         

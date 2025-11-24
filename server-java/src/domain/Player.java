@@ -52,7 +52,19 @@ public class Player {
         level++;
     }
 
+    public void killPlayer() {
+        chanceLives(-1);
+        personaje.resetPos();
+    }
+
     public void chanceLives(int live) {
         lives += live;
     }
+
+    public String toJson() {
+        return String.format("{\"id\":%d,\"score\":%d,\"lives\":%d,%s}",
+        playerId, score, lives, personaje.toJson() 
+    );
+}
+
 }

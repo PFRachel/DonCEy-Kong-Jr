@@ -355,8 +355,9 @@ public class GameState {
         
             //for (Croc c : crocs) c.update(dt * velocidadFactor);
 
-            // 3) colisiones (simplificado)
+            // 3) colisiones 
             // ... detectar y actualizar vidas/puntaje
+            detectarcolisiones();
 
             // 4) reglas de rescate → subir dificultad
             // if (rescato) { dkjr.vidas++; velocidadFactor *= 1.10f; reiniciarNivel(); }
@@ -425,6 +426,62 @@ public class GameState {
         }
     }
 
+    private void detectarcolisiones(){
+        for (Player player : players.values()) {
+            // Obtener personaje de juego y pantalla
+            DKJr mono = player.getMono();
+            String pantalla = player.getPantallaId();
+
+            //Posicion del mono
+            float mx = mono.getX();
+            float my = mono.getY();
+
+            // -------------------------
+            //  COLISIÓN CON COCODRILO
+            // -------------------------
+
+            Iterator<GameObject> it = objetos.iterator();
+
+            while (it.hasNext()) {
+                GameObject o = it.next();
+                
+                // Buscar para cada croc en x pantalla
+                if (o instanceof BlueCroc) {
+                    if (!pantalla.equals(o.getPantallaDisplay())) continue;
+
+                    float dx = Math.abs(mx - o.getX());
+                    float dy = Math.abs(my - o.getY());
+
+                    if (dx < 40 && dy < 40) {
+                        player.killPlayer();
+                        System.out.println("[COLISION] Jugador " + player.getPlayerId() + " murió");
+                        break;
+                    }
+                    continue;
+                }
+                // -------------------------
+                //  COLISIÓN CON FRUTA
+                // -------------------------
+                if (o.getClass().getSimpleName().equals("Fruit")) {
+                    if (!pantalla.equals(o.getPantallaDisplay())) continue;
+
+                    float dx = Math.abs(mx - o.getX());
+                    float dy = Math.abs(my - o.getY());
+
+                    if (dx < 40 && dy < 40) {
+
+                        int pts = o.getPuntos();   // obtener puntos de la fruta
+                        player.addScore(pts);      // sumar puntos al jugador
+
+                        System.out.println("[FRUTA] Jugador " + player.getPlayerId() +
+                            " obtuvo +" + pts + " puntos!");
+
+                        it.remove();               // eliminar fruta del mapa
+                    }
+                }
+            }
+        }
+    }
 
     public String toJson() {
         // JSON sencillo a mano (puedes cambiar a una lib luego)
@@ -437,7 +494,7 @@ public class GameState {
         for (Map.Entry<String, Player> entry : players.entrySet()) {
             if (!first) sb.append(",");
             sb.append("\"").append(entry.getValue().getPantallaId()).append("\":");
-            sb.append(entry.getValue().getMono().toJson());
+            sb.append(entry.getValue().toJson());
             first = false;
         }
         // Cerrar players y abrir objetos

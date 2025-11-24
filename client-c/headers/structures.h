@@ -17,6 +17,9 @@ typedef struct {
     Vector2 position; //Posicion final
     int width, height; //Dimensiones para render 
     int score; //Puntuacion
+    int level;
+    int lives;
+    int id; // 1 o 2
     bool connected; //Control del estado
     bool onLiana; //Animacion en liana
     int currentLiana; //Liana actual

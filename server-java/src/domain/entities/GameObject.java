@@ -36,6 +36,12 @@ public abstract class GameObject {
     // -----------------------------
     public void setPantallaDisplay(String pantalla) { this.pantallaDisplay = pantalla; }
 
+    // -----------------------------
+    // OBTENER POS
+    // -----------------------------
+    public float getX() { return x; }
+    public float getY() { return y; }
+
     public void setPosition(float x, float y) { 
         this.x = x; 
         this.y = y; 
@@ -44,5 +50,8 @@ public abstract class GameObject {
     // Métodos solo para crocs
     public void mover(float deltaTime) {} // Movimiento
     public void update(float factor) {} // Aumentar vel
+
+    public abstract int getPuntos();
+
 }
 
