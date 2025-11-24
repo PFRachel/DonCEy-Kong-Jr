@@ -97,9 +97,6 @@ public class ClientHandler implements Runnable {
         } else if (msg.startsWith("INPUT")) {
             String fullmsg = msg + " " + pantallaId;
             state.enqueueInput(fullmsg);
-            state.update(0.016f);
-            String gameStateJson = state.toJson();
-            send("STATE " + gameStateJson + "\n");
         } else if (msg.startsWith("ADMIN_SPAWN_CROC")) {
             state.adminSpawnCroc(msg);// validación de permisos pendiente
         } else if (msg.startsWith("ADMIN_SPAWN_FRUIT")) {

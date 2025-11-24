@@ -77,7 +77,6 @@ public class GameServer {
 
     public void remove(ClientHandler h) {
         clients.remove(h);
-        state.onClientDisconnected(h);
     }
 
     public void broadcast(String line) {
