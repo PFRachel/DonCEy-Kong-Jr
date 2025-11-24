@@ -38,8 +38,10 @@
 int main() {
     // Inicializar Winsock
     WSADATA w; 
-    // win
+
+    // win y gameover
     int mostrarWin = 0;
+    int mostrarGameOver = 0;
     float winTimer = 0;
 
     if (WSAStartup(MAKEWORD(2,2), &w)!= 0){
@@ -117,12 +119,19 @@ int main() {
     while (!WindowShouldClose()) {
         deltaTime = obtenerDeltaTime();
         
-        // Tomar el Input del User
-        int up = IsKeyDown(KEY_UP);
-        int down = IsKeyDown(KEY_DOWN); 
-        int left = IsKeyDown(KEY_LEFT);
-        int right = IsKeyDown(KEY_RIGHT);
-        int jump = IsKeyDown(KEY_SPACE);
+        // Tomar el Input del User o detenerlo en gameover 
+        int up, down, left, right, jump;
+
+        if (mostrarGameOver) {
+            up = down = left = right = jump = 0;   // sin input
+        } else {
+            up = IsKeyDown(KEY_UP);
+            down = IsKeyDown(KEY_DOWN); 
+            left = IsKeyDown(KEY_LEFT);
+            right = IsKeyDown(KEY_RIGHT);
+            jump = IsKeyDown(KEY_SPACE);
+        }
+
  
         // Enviar al servidor los inputs
         char msg[128];
@@ -144,6 +153,10 @@ int main() {
                 mostrarWin = 1;
                 winTimer = 1.5f;
                 printf("=== WIN RECEIVED ===\n");
+            }
+            if (strstr(buffer, "GAME_OVER") != NULL) {
+                mostrarGameOver = 1;
+                printf("=== GAME OVER RECEIVED ===\n");
             }
              // Punto de inicio del JSON completo
             char* jsonStart = strstr(buffer, "{");
@@ -235,6 +248,10 @@ render_loop:
                 mostrarWin = 0;
             }
             DrawText("WIN!", 350, 200, 80, YELLOW);
+        }
+
+        if (mostrarGameOver) {
+            DrawText("GAME OVER", 260, 350, 60, RED);
         }
 
         EndDrawing();

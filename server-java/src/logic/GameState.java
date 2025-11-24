@@ -89,7 +89,7 @@ public class GameState {
         plataformas.add(new Plataforma(173, 350, 10, 18));// Plataforma más alta de las dos del centro
         plataformas.add(new Plataforma(178, 500, 40, 10)); // Plataforma izquierda inferior
         plataformas.add(new Plataforma(697, 430, 90, 10));// Plataforma central derecha
-        plataformas.add(new Plataforma(522, 185, 10, 10));// desnivel hacia la derecha
+        plataformas.add(new Plataforma(522, 185, 100, 10));// desnivel hacia la derecha
         plataformas.add(new Plataforma(260, 117,  40, 5));// Plataforma pequeña sobre Mario
         plataformas.add(new Plataforma(0,   175, 500, 10));// Plataforma grande superior
         // Elementos de Default, fijos
@@ -494,6 +494,15 @@ public class GameState {
                 player.killPlayer();
                 System.out.println("[CAIDA] Jugador " + player.getPlayerId() + " murió por caída");
                 mono.clearFallen();
+
+                // si se queda sin vidas
+                if (player.getLives() <= 0) {
+                    ClientHandler handler = pantallas.get(pantalla);
+                    if (handler != null) {
+                        handler.send("GAME_OVER\n");
+                        System.out.println("[SERVER] GAME_OVER enviado a " + pantalla);
+                    }
+                }
                 continue;
             }
 
@@ -515,6 +524,16 @@ public class GameState {
                     if (dx < 40 && dy < 40) {
                          player.killPlayer();
                         System.out.println("[COLISION] Jugador " + player.getPlayerId() + " murió");
+                        
+                        // si se queda sin vidas
+                        if (player.getLives() <= 0) {
+                            ClientHandler handler = pantallas.get(pantalla);
+                            if (handler != null) {
+                                handler.send("GAME_OVER\n");
+                                System.out.println("[SERVER] GAME_OVER enviado a " + pantalla);
+                            }
+                        }
+
                         break;
                     }
                     continue;
@@ -534,6 +553,16 @@ public class GameState {
                     if (dx < 40 && dy < 40) {
                          player.killPlayer();
                         System.out.println("[COLISION] Jugador " + player.getPlayerId() + " murió");
+                        
+                        // si se queda sin vidas
+                        if (player.getLives() <= 0) {
+                            ClientHandler handler = pantallas.get(pantalla);
+                            if (handler != null) {
+                                handler.send("GAME_OVER\n");
+                                System.out.println("[SERVER] GAME_OVER enviado a " + pantalla);
+                            }
+                        }
+                        
                         break;
                     }
                     continue;
