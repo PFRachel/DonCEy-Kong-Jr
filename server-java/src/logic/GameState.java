@@ -27,6 +27,7 @@ import logic.factory.FactoryProducer;
 import logic.factory.GameObjectFactory;
 import domain.entities.BlueCroc;
 import domain.entities.GameObject;
+import domain.entities.RedCroc;
 
 
 public class GameState {
@@ -436,13 +437,12 @@ public class GameState {
             float mx = mono.getX();
             float my = mono.getY();
 
-            // -------------------------
-            //  COLISIÓN CON COCODRILO
-            // -------------------------
-
             Iterator<GameObject> it = objetos.iterator();
 
             while (it.hasNext()) {
+                // -------------------------
+                //  COLISIÓN CON COCODRILO
+                // -------------------------
                 GameObject o = it.next();
                 
                 // Buscar para cada croc en x pantalla
@@ -453,7 +453,26 @@ public class GameState {
                     float dy = Math.abs(my - o.getY());
 
                     if (dx < 40 && dy < 40) {
-                        player.killPlayer();
+                         player.killPlayer();
+                        System.out.println("[COLISION] Jugador " + player.getPlayerId() + " murió");
+                        break;
+                    }
+                    continue;
+                }
+
+                // -------------------------
+                //  COLISIÓN CON COCODRILO
+                // -------------------------
+                
+                // Buscar para cada croc en x pantalla
+                if (o instanceof RedCroc) {
+                    if (!pantalla.equals(o.getPantallaDisplay())) continue;
+
+                    float dx = Math.abs(mx - o.getX());
+                    float dy = Math.abs(my - o.getY());
+
+                    if (dx < 40 && dy < 40) {
+                         player.killPlayer();
                         System.out.println("[COLISION] Jugador " + player.getPlayerId() + " murió");
                         break;
                     }
