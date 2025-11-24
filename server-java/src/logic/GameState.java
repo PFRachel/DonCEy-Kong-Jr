@@ -9,6 +9,17 @@
  *      recibidas de los clientes.
  * ---------------------------------------------------------------
  */
+/**
+ * ---------------------------------------------------------------
+ *  Nombre del archivo: GameState.java
+ *  Paquete: logic
+ *  Descripción:
+ *      Mantiene el estado global del juego, incluyendo jugadores,
+ *      espectadores y entidades del mundo (frutas, cocodrilos, etc.).
+ *      Provee métodos para modificar el estado según las acciones
+ *      recibidas de los clientes.
+ * ---------------------------------------------------------------
+ */
 package logic;
 
 import domain.DKJr;
@@ -362,6 +373,16 @@ public class GameState {
 
             // 4) reglas de rescate → subir dificultad
             // if (rescato) { dkjr.vidas++; velocidadFactor *= 1.10f; reiniciarNivel(); }
+            // --- DETECCIÓN DE META PARA CADA JUGADOR ---
+        for (Player p : players.values()) {
+            DKJr mono = p.getMono();
+
+            if (haLlegadoMeta(mono)) {
+
+                levelUp(p);  // subir nivel + reset 
+            }
+        } 
+
 
         }
 
@@ -398,7 +419,49 @@ public class GameState {
         objetos.add(croc);
         System.out.println("[SPAWN1] BlueCroc → " + pantalla + " (Liana " + lianaId + ")");
     }
-    
+    //=====================================
+    //========funcion de ha llegado a la meta =======================
+    private boolean haLlegadoMeta(DKJr mono) {
+    float metaX = 240;
+    float metaY = 117;
+    float metaW = 80;
+    float metaH = 20;
+    //plataformas.add(new Plataforma(260, 117,  88, 25));// Plataforma pequeña sobre Mario
+    return mono.getX() > metaX &&
+           mono.getX() < metaX + metaW &&
+           mono.getY() > metaY - 40 &&
+           mono.getY() < metaY + metaH;
+    }
+    public void levelUp(Player p) {
+        System.out.println("=== LEVEL UP ===");
+        // Enviar mensaje WIN SOLO a ese jugador
+        // 1) MANDAR WIN AL PLAYER
+        ClientHandler handler = pantallas.get(p.getPantallaId());
+        if (handler != null) {
+            handler.send("WIN\n");
+            System.out.println("[SERVER] WIN enviado a " + p.getPantallaId());
+        }
+
+        // Subir nivel lógico
+        level++;
+        p.nextLevel();
+
+        // Aumentar velocidad global
+        velocidadFactor *= 1.20f;
+
+        // Aumentar la velocidad de TODOS los cocodrilos existentes
+        for (GameObject obj : objetos) {
+            obj.update(1.20f);
+        }
+
+        // Reiniciar mono
+        p.getMono().setPosition(100, 700);
+
+        
+    }
+
+
+    //======================================
     private void processInput(String msg, float dt) {
         try {
             // Formato: "INPUT <tick> <up> <down> <left> <right> <jump> <pantallaId>"

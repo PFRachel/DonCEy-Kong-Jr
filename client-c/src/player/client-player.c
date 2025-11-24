@@ -38,6 +38,10 @@
 int main() {
     // Inicializar Winsock
     WSADATA w; 
+    // win
+    int mostrarWin = 0;
+    float winTimer = 0;
+
     if (WSAStartup(MAKEWORD(2,2), &w)!= 0){
         
         printf("Error: %d\n", WSAGetLastError());
@@ -130,21 +134,26 @@ int main() {
         // Recibir estado 
         char buffer[4096];
         int bytesRecibidos = recibirMensaje(serverSocket, buffer, sizeof(buffer)-1);
-       
+    
         // Procesar mensaje del server
         if (bytesRecibidos > 0) {
             // Asegurar terminación del string
             buffer[bytesRecibidos] = '\0';
 
-            // Punto de inicio del JSON completo
-            char* jsonStart = strstr(buffer, "{");
-            if (!jsonStart) {
-                continue;
+            if (strstr(buffer, "WIN") != NULL) {
+                mostrarWin = 1;
+                winTimer = 1.5f;
+                printf("=== WIN RECEIVED ===\n");
             }
-
+             // Punto de inicio del JSON completo
+            char* jsonStart = strstr(buffer, "{");
+            if (!jsonStart) { 
+                goto render_loop;//continue
+            }
+           
             if (strstr(buffer, "\"dkjr\":null") != NULL) {
                 // No hay datos válidos, NO actualizar nada
-                continue;
+                goto render_loop;
             }
             
             // Procesar objetos
@@ -190,7 +199,8 @@ int main() {
                 }
             }
         }
-
+    
+render_loop:
         // AUN NO ES FUNCIONAL
         actualizarAnimacionJugador(&miJuego.player);
 
@@ -205,6 +215,7 @@ int main() {
 
             // Labels
         DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);
+        
         DrawText("JUGADOR:", 50, 150, 20, WHITE);
         DrawText(TextFormat("%s", miPantallaId), 150, 150, 20, WHITE);
 
@@ -216,6 +227,16 @@ int main() {
 
         DrawText("NIVEL:", 50, 240, 20, WHITE);
         DrawText(TextFormat("%d", miJuego.player.level), 150, 240, 20, GREEN);
+        
+        // >>> AGREGADO WIN <<<
+        if (mostrarWin) {
+            winTimer -= deltaTime;
+            if (winTimer <= 0) {
+                mostrarWin = 0;
+            }
+            DrawText("WIN!", 350, 200, 80, YELLOW);
+        }
+
         EndDrawing();
     }
         
