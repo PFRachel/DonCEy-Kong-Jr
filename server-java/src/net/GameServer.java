@@ -7,16 +7,38 @@
  *      Acepta múltiples clientes, crea hilos para cada uno
  *      y mantiene el estado global del juego mediante GameState.
  * ---------------------------------------------------------------
- */
+  *      Servidor principal del juego. Acepta conexiones entrantes,
+ *
+ *  Entradas:
+ *      - Conexiones TCP de clientes (jugadores y espectadores).
+ *      - Comandos ingresados por consola (ADMIN_*).
+ *
+ *  Salidas:
+ *      - Mensajes enviados a todos los clientes con broadcast().
+ *      - Estados del juego en formato JSON (STATE <json>).
+ *      - Mensajes ACK/ERR gestionados por ClientHandler.
+ *
+ *  Restricciones:
+ *      - Máximo de jugadores/espectadores definido por GameState.
+ *      - Los comandos ADMIN no tienen un sistema de permisos aún.
+ *      - Un hilo dedicado atiende cada conexión entrante.
+ *      - El bucle del juego se ejecuta a 60 Hz mediante ObservableGameLoop.
+ **/
 package net;
 
-import logic.GameLoop;
 import logic.GameState;
+import logic.factory.CrocFactory;
+import logic.factory.FruitFactory;
+import logic.observer.GameStateObserver;
+import logic.observer.ObservableGameLoop;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import domain.entities.Fruit;
 
 /**
  * Servidor de juego: acepta clientes (jugadores y espectadores)
@@ -26,13 +48,51 @@ public class GameServer {
     private final int port;
     private final CopyOnWriteArrayList<ClientHandler> clients = new CopyOnWriteArrayList<>();
     private final GameState state = new GameState();
-    private GameLoop loop;
+
+    private ObservableGameLoop observableLoop;
 
     public GameServer(int port) { this.port = port; }
 
     public void start() {
-        loop = new GameLoop(state, this::broadcastState);
-        loop.start(); // inicia el bucle a 60 Hz
+        // HILO PARA LEER COMANDOS DE CONSOLA (ADMIN)
+        new Thread(() -> {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("[ADMIN] Comandos activos: ADMIN_SPAWN_CROC y ADMIN_SPAWN_FRUIT");
+            System.out.println("  ADMIN_SPAWN_CROC <color> <lianaIndex> <pantalla>");
+            System.out.println("    Ej: ADMIN_SPAWN_CROC blue 3 pantalla1");
+            System.out.println("  ADMIN_SPAWN_FRUIT <lianaIndex> <altura> <puntos> <pantalla>");
+            System.out.println("    Ej: ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
+            System.out.println("  ADMIN_DELETE_FRUIT <lianaIndex> <altura> <pantalla>");
+            System.out.println("    Ej: ADMIN_DELETE_FRUIT 2 90 pantalla1");
+
+            while (true) {
+                String line = sc.nextLine().trim();
+                procesarComandoAdmin(line);
+            }
+        }, "AdminConsole").start();
+
+        // ---------------------------------------------------------------
+        // USO DEL PATRÓN OBSERVER (JAVA → SUBJECT)
+        // ---------------------------------------------------------------
+
+        // Crear el Subject que envuelve el GameLoop lógico del juego
+        observableLoop = new ObservableGameLoop(state);
+
+        // Registrar un Observer que envía el estado JSON a TODOS los clientes
+        observableLoop.addObserver(new GameStateObserver() {
+            @Override
+            public void onStateJson(String stateJson) {
+                // Mismo formato que antes para el spectator y player
+                broadcast("STATE " + stateJson + "\n");
+            }
+        });
+
+        // Iniciar el bucle de juego (60 Hz)
+        observableLoop.start();
+
+        // ---------------------------------------------------------------
+        // SERVIDOR TCP 
+        // ---------------------------------------------------------------
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("[Server] Listening on " + port);
@@ -46,17 +106,108 @@ public class GameServer {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            loop.stop();
+            if (observableLoop != null) {
+                observableLoop.stop();
+            }
         }
     }
 
-    public void remove(ClientHandler h) { clients.remove(h); }
+    public void remove(ClientHandler h) {
+        clients.remove(h);
+    }
 
     public void broadcast(String line) {
         for (ClientHandler c : clients) c.send(line);
     }
+     // ======================================
+    // MANEJO DE COMANDOS ADMIN
+    // ======================================
+    private void procesarComandoAdmin(String cmd) {
 
-    private void broadcastState(String stateJson) {
-        broadcast("STATE " + stateJson + "\n");
+        String[] p = cmd.split("\\s+");
+        if (p.length == 0) return;
+
+        switch (p[0]) {
+
+            // ---------------------------------------------
+            case "ADMIN_SPAWN_CROC":
+                if (p.length != 4) {
+                    System.out.println("Uso: ADMIN_SPAWN_CROC <color> <liana> <pantalla>");
+                    return;
+                }
+
+                String color = p[1];
+                String lianaStr = p[2];
+                String pantalla = p[3];
+
+                // validar número
+                try {
+                    Integer.parseInt(lianaStr);
+                } catch (NumberFormatException ex) {
+                    System.out.println("[ADMIN] liana debe ser un entero.");
+                    return;
+                }
+
+                String msgCroc = String.format("ADMIN_SPAWN_CROC %s %s %s", color, lianaStr, pantalla);
+                state.adminSpawnCroc(msgCroc);
+
+                broadcast("STATE " + state.toJson() + "\n");
+                System.out.println("[ADMIN] Ejecutado: " + msgCroc);
+                break;
+
+            // ---------------------------------------------
+            case "ADMIN_SPAWN_FRUIT":
+                if (p.length != 5) {
+                    System.out.println("Uso: ADMIN_SPAWN_FRUIT <liana> <altura> <puntos> <pantalla>");
+                    return;
+                }
+
+                String lStr = p[1];
+                String altura = p[2];
+                String puntos = p[3];
+                String pant = p[4];
+
+                try {
+                    Integer.parseInt(lStr);
+                    Float.parseFloat(altura);
+                    Integer.parseInt(puntos);
+                } catch (NumberFormatException ex) {
+                    System.out.println("[ADMIN] lianaIndex, altura o puntos inválidos.");
+                    return;
+                }
+
+                String msgFruit = String.format("ADMIN_SPAWN_FRUIT %s %s %s %s", lStr, altura, puntos, pant);
+                state.adminSpawnFruit(msgFruit);
+
+                broadcast("STATE " + state.toJson() + "\n");
+                System.out.println("[ADMIN] Ejecutado: " + msgFruit);
+                break;
+
+            // ---------------------------------------------
+            case "ADMIN_DELETE_FRUIT":
+                if (p.length != 4) {
+                    System.out.println("Uso: ADMIN_DELETE_FRUIT <liana> <altura> <pantalla>");
+                    return;
+                }
+
+                try {
+                    Integer.parseInt(p[1]);
+                    Float.parseFloat(p[2]);
+                } catch (NumberFormatException ex) {
+                    System.out.println("[ADMIN] formato inválido.");
+                    return;
+                }
+
+                String msgDel = String.format("ADMIN_DELETE_FRUIT %s %s %s", p[1], p[2], p[3]);
+                state.adminDeleteFruit(msgDel);
+
+                broadcast("STATE " + state.toJson() + "\n");
+                System.out.println("[ADMIN] Ejecutado: " + msgDel);
+                break;
+
+            default:
+                System.out.println("[ADMIN] Comando no reconocido.");
+        }
     }
+    
 }
