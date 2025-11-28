@@ -6,6 +6,27 @@
  *      Manejador individual de un cliente conectado al servidor.
  *      Escucha mensajes del cliente, los procesa y actualiza
  *      el estado del juego según las acciones recibidas.
+ * *  Entradas:
+ *      - Mensajes enviados por el cliente:
+ *          · JOIN_PLAYER <nick>
+ *          · JOIN_SPECTATOR <nick>
+ *          · INPUT <tick> <up> <down> <left> <right> <jump>
+ *          · ADMIN_SPAWN_CROC ...
+ *          · ADMIN_SPAWN_FRUIT ...
+ *          · ADMIN_DELETE_FRUIT ...
+ *          · LEAVE
+ *
+ *  Salidas:
+ *      - Envío directo al cliente mediante `send()`:
+ *          · ACK <pantallaAsignada>
+ *          · ERR <motivo>
+ *          · Mensajes del servidor (WIN, GAME_OVER, estado JSON, etc.)
+ *
+ *  Restricciones:
+ *      - Cada instancia maneja un único cliente (un solo socket).
+ *      - Debe notificar al GameState cuando el cliente se desconecta.
+ *      - No valida aún permisos de comandos ADMIN (pendiente).
+ *
  * ---------------------------------------------------------------
  */
 package net;
@@ -16,10 +37,21 @@ import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
+    
     private final Socket socket;
     private final GameState state;
     private final GameServer server;
     private PrintWriter out;
+    //-----------
+    private String pantallaId;
+    private String tipo;
+
+    public void setPantallaId(String id){ this.pantallaId = id; }
+    public String getPantallaId(){ return pantallaId; }
+
+    public void setTipo(String t){ this.tipo = t; }
+    public String getTipo(){ return tipo; }
+
 
     public ClientHandler(Socket socket, GameState state, GameServer server) {
         this.socket = socket; this.state = state; this.server = server;
@@ -39,34 +71,53 @@ public class ClientHandler implements Runnable {
             String line;
             // ACA EL SERVER RECIBE MENSAJES DEL CLIENTE
             while ((line = in.readLine()) != null) {
-                System.out.println("[Server] Received: " + line);
+                //System.out.println("[Server] Received: " + line);
                 handle(line.trim());
             }
         } catch (IOException e) {
             System.out.println("[Server] Client IO closed: " + e.getMessage());
         } finally {
+            // Avisar al GameState que este cliente se desconectó
+            state.onClientDisconnected(this);
             server.remove(this);
             try { socket.close(); } catch (IOException ignored) {}
         }
     }
+
     private void handle(String msg) {
         if (msg.startsWith("JOIN_PLAYER")) {
             String nick = msg.substring("JOIN_PLAYER".length()).trim();
             if (state.addPlayer(nick, this)) {
-                send("ACK\n");
+                // IMPORTANTE: enviar qué pantalla le tocó a este jugador
+                // para que el cliente C pueda poner miPantallaId = "pantalla1" o "pantalla2"
+                String pantalla = getPantallaId(); // "pantalla1" o "pantalla2"
+                if (pantalla != null) {
+                    send("ACK " + pantalla + "\n");
+                } else {
+                    // Por seguridad, al menos mandar ACK simple
+                    send("ACK\n");
+                }
             } else {
                 send("ERR max_players\n");
+                try { socket.close(); } catch (IOException ignored) {}
             }
         } else if (msg.startsWith("JOIN_SPECTATOR")) {
             String nick = msg.substring("JOIN_SPECTATOR".length()).trim();
             if (state.addSpectator(nick, this)) {
-                send("ACK\n");
+                String target = state.getSpectatorTargetFor(this);
+                if (target != null) {
+                    send("ACK " + target + "\n");
+                } else {
+                    send("ACK\n");
+                }
             } else {
                 send("ERR max_spectators\n");
+                try { socket.close(); } catch (IOException ignored) {}
             }
             // INPUT <tick> <up> <down> <left> <right> <jump>
         } else if (msg.startsWith("INPUT")) {
-            state.enqueueInput(msg);
+            String fullmsg = msg + " " + pantallaId;
+            state.enqueueInput(fullmsg);
         } else if (msg.startsWith("ADMIN_SPAWN_CROC")) {
             state.adminSpawnCroc(msg);// validación de permisos pendiente
         } else if (msg.startsWith("ADMIN_SPAWN_FRUIT")) {

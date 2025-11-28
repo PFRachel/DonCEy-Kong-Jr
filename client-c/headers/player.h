@@ -6,6 +6,21 @@
 //      - Gestión de inputs y renderizado
 //      - Detección de colisiones y física básica
 //      - Comunicación mediante sockets Windows
+// Entradas:
+//      - Datos recibidos por socket desde el servidor (JSON, estados)
+//      - Inputs del jugador (teclas de movimiento y salto)
+//      - Estructuras de juego (Player, GameState, objetos)
+//
+// Salidas:
+//      - Mensajes enviados al servidor (inputs, registro, actualizaciones)
+//      - Actualización de estructuras internas del cliente
+//      - Renderizado visual en pantalla mediante Raylib
+//
+// Restricciones:
+//      - Solo compatible con sistemas Windows (uso de Winsock2)
+//      - Las funciones requieren estructuras inicializadas correctamente
+//      - Los sockets deben abrirse y cerrarse adecuadamente
+//      - Las texturas deben cargarse antes del renderizado
 // ---------------------------------------------------------------
 #ifndef PLAYER_H
 #define PLAYER_H
@@ -45,8 +60,9 @@ void inicializarLianas(Liana lianas[]);
 void inicializarJugador(Player* jugador);
 
 // ==================== Actualización ====================
-void aplicarGravedad(Player* jugador);
 void actualizarAnimacionJugador(Player* jugador);
+int procesarMensajeObjetos(const char* mensaje, GameState* estado, const char* miPantallaId);
+void actualizarElementos(GameState* estado, const char* json, const char* miPantallaId);
 
 // ==================== Colisión ====================
 bool colisionCocodrilo(const Player* jugador, const Cocodrilo* cocodrilo);

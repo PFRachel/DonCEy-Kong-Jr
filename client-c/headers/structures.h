@@ -4,6 +4,14 @@
 //      Define todas las estructuras de datos del juego
 //      - Jugador, enemigos, frutas, lianas
 //      - Estado del juego (GameInstance)
+// Entradas:
+//      Datos recibidos del servidor o generados por el juego.
+//
+// Salidas:
+//      Estructuras usadas para lógica, físicas y render.
+//
+// Restricciones:
+//      Deben respetar los límites definidos en constants.h.
 // ---------------------------------------------------------------
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
@@ -17,6 +25,9 @@ typedef struct {
     Vector2 position; //Posicion final
     int width, height; //Dimensiones para render 
     int score; //Puntuacion
+    int level;
+    int lives;
+    int id; // 1 o 2
     bool connected; //Control del estado
     bool onLiana; //Animacion en liana
     int currentLiana; //Liana actual
@@ -56,6 +67,7 @@ typedef struct {
 
 // Estructura de lianas
 typedef struct {
+    float x; // Posicion en X
     Vector2 top; //Punto inicial
     Vector2 bottom; //Punto final (para la distancia de la liana)
     int id;
