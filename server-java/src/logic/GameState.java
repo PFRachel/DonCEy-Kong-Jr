@@ -356,12 +356,12 @@ public class GameState {
                 }
             }
         }
-            crocTimer += dt;
-            if (crocTimer >= crocIntervalo) {
-                crocTimer = 0;
+            //crocTimer += dt;
+            //if (crocTimer >= crocIntervalo) {
+                //crocTimer = 0;
 
-                autoSpawnCroc();
-            }
+                //autoSpawnCroc();
+            //}
                     
             // 2. Actualizar objetos Abstract Factory
             //for (GameObject obj : objetos) obj.update(dt * velocidadFactor);
