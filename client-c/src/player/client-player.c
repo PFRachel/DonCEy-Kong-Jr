@@ -8,6 +8,15 @@
 //       - Envía inputs 
 //
 // ACÁ EJECUTAS EL CODIGO PARA CREAR UN PLAYER
+// Entradas:
+//      Datos del servidor (JSON, señales WIN/GAME_OVER),
+//      inputs del jugador y texturas del juego.
+//
+// Salidas:
+//      Mensajes TCP al servidor y renderizado gráfico local.
+//
+// Restricciones:
+//      Solo Windows, requiere Winsock2 y Raylib inicializados.
 // ---------------------------------------------------------------
 
 //  Evitar conflictos entre Raylib y Windows
@@ -229,17 +238,17 @@ render_loop:
             // Labels
         DrawText("DONKEY KONG JR", 250, 50, 30, DARKBLUE);
         
-        DrawText("JUGADOR:", 50, 150, 20, WHITE);
-        DrawText(TextFormat("%s", miPantallaId), 150, 150, 20, WHITE);
+        DrawText("JUGADOR:", 650, 40, 20, WHITE);
+        DrawText(TextFormat("%s", miPantallaId), 750, 40, 20, WHITE);
 
-        DrawText("PUNTOS:", 50, 180, 20, WHITE);
-        DrawText(TextFormat("%d", miJuego.player.score), 150, 180, 20, YELLOW);
+        DrawText("PUNTOS:", 650, 60, 20, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.score), 750, 60, 20, YELLOW);
 
-        DrawText("VIDAS:", 50, 210, 20, WHITE);
-        DrawText(TextFormat("%d", miJuego.player.lives), 150, 210, 20, RED);
+        DrawText("VIDAS:", 650, 80, 20, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.lives), 750, 80, 20, RED);
 
-        DrawText("NIVEL:", 50, 240, 20, WHITE);
-        DrawText(TextFormat("%d", miJuego.player.level), 150, 240, 20, GREEN);
+        DrawText("NIVEL:", 650, 100, 20, WHITE);
+        DrawText(TextFormat("%d", miJuego.player.level), 750, 100, 20, GREEN);
         
         // >>> AGREGADO WIN <<<
         if (mostrarWin) {

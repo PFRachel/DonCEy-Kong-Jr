@@ -1,5 +1,16 @@
 package domain;
-
+ /* Entrada:
+ *     - x, y: posición
+ *     - width, height: tamaño
+ *
+ * Salida:
+ *     - Plataforma utilizable para colisiones
+ *
+ * Restricciones:
+ *     - No se mueve
+ *     - Solo colisiones simples rectangulares
+ * ---------------------------------------------------------------
+ */
 import java.util.Vector;
 
 public class Plataforma {

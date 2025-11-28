@@ -6,6 +6,27 @@
  *      Manejador individual de un cliente conectado al servidor.
  *      Escucha mensajes del cliente, los procesa y actualiza
  *      el estado del juego según las acciones recibidas.
+ * *  Entradas:
+ *      - Mensajes enviados por el cliente:
+ *          · JOIN_PLAYER <nick>
+ *          · JOIN_SPECTATOR <nick>
+ *          · INPUT <tick> <up> <down> <left> <right> <jump>
+ *          · ADMIN_SPAWN_CROC ...
+ *          · ADMIN_SPAWN_FRUIT ...
+ *          · ADMIN_DELETE_FRUIT ...
+ *          · LEAVE
+ *
+ *  Salidas:
+ *      - Envío directo al cliente mediante `send()`:
+ *          · ACK <pantallaAsignada>
+ *          · ERR <motivo>
+ *          · Mensajes del servidor (WIN, GAME_OVER, estado JSON, etc.)
+ *
+ *  Restricciones:
+ *      - Cada instancia maneja un único cliente (un solo socket).
+ *      - Debe notificar al GameState cuando el cliente se desconecta.
+ *      - No valida aún permisos de comandos ADMIN (pendiente).
+ *
  * ---------------------------------------------------------------
  */
 package net;

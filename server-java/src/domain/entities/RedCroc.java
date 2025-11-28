@@ -2,6 +2,19 @@ package domain.entities;
 
 import java.util.List;
 import domain.Liana;
+/**
+ * Cocodrilo rojo (producto concreto de CrocFactory).
+ *
+ * Entrada:
+ *   - lianaId, posición inicial, lista de lianas.
+ *
+ * Salida:
+ *   - Posición actualizada y JSON para cliente.
+ *
+ * Restricciones:
+ *   - Movimiento oscilante entre altura 0–100.
+ *   - Solo se desplaza sobre su propia liana.
+ */
 
 //clase concreta que representa un cocodrilo rojo.
 public class RedCroc extends  GameObject {

@@ -6,6 +6,21 @@
  *      Contiene el bucle principal del juego. Se encarga de
  *      actualizar el estado del juego en intervalos regulares
  *      y notificar a los clientes conectados sobre los cambios.
+ * 
+ * 
+ *      Bucle principal del juego. Ejecuta la lógica del servidor
+ *           y envía el estado actualizado en JSON.
+ *
+ *  Entrada:
+ *      - GameState state: estado del juego a actualizar.
+ *      - Consumer<String> onStateJson: callback que recibe el JSON.
+ *
+ *  Salida:
+ *      - Envía periódicamente un JSON con el estado del juego.
+ *
+ *  Restricciones:
+ *      - Corre en un único hilo programado (ScheduledExecutor).
+ *      - Debe ejecutarse a 60 Hz constantes.
  * ---------------------------------------------------------------
  */
 package logic;

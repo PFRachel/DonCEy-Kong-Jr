@@ -7,7 +7,23 @@
  *      Acepta múltiples clientes, crea hilos para cada uno
  *      y mantiene el estado global del juego mediante GameState.
  * ---------------------------------------------------------------
- */
+  *      Servidor principal del juego. Acepta conexiones entrantes,
+ *
+ *  Entradas:
+ *      - Conexiones TCP de clientes (jugadores y espectadores).
+ *      - Comandos ingresados por consola (ADMIN_*).
+ *
+ *  Salidas:
+ *      - Mensajes enviados a todos los clientes con broadcast().
+ *      - Estados del juego en formato JSON (STATE <json>).
+ *      - Mensajes ACK/ERR gestionados por ClientHandler.
+ *
+ *  Restricciones:
+ *      - Máximo de jugadores/espectadores definido por GameState.
+ *      - Los comandos ADMIN no tienen un sistema de permisos aún.
+ *      - Un hilo dedicado atiende cada conexión entrante.
+ *      - El bucle del juego se ejecuta a 60 Hz mediante ObservableGameLoop.
+ **/
 package net;
 
 import logic.GameState;

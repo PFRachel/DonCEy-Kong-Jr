@@ -7,6 +7,19 @@
  *      espectadores y entidades del mundo (frutas, cocodrilos, etc.).
  *      Provee métodos para modificar el estado según las acciones
  *      recibidas de los clientes.
+ *  *  Entrada:
+ *      - Inputs enviados por los clientes.
+ *      - Comandos ADMIN.
+ *      - Tiempo dt del GameLoop.
+ *
+ *  Salida:
+ *      - Estado JSON para cada pantalla.
+ *      - Eventos: WIN, GAME_OVER, etc.
+ *
+ *  Restricciones:
+ *      - Máx. 2 jugadores y 4 espectadores.
+ *      - Cada espectador se asigna a pantalla1 o pantalla2.
+ *      - Ciertas reglas de spawn según nivel y pantalla.
  * ---------------------------------------------------------------
  */
 package logic;
@@ -94,17 +107,17 @@ public class GameState {
         plataformas.add(new Plataforma(0,   175, 500, 10));// Plataforma grande superior
         // Elementos de Default, fijos
         // Croc(tipo, lianaId, pantallaDisplay)
-        adminSpawnCroc("ADMIN_SPAWN_CROC red 0 pantalla1");
+        //adminSpawnCroc("ADMIN_SPAWN_CROC red 0 pantalla1");
         // Fruit(lianaId, altura, puntos, pantallaDisplay)
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla1");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 10 40 pantalla1");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla1");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 10 40 pantalla1");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla1");
 
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla2");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 6 10 40 pantalla2");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla2");
-        adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla2");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 1 10 40 pantalla2");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 6 10 40 pantalla2");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 2 90 40 pantalla2");
+        //adminSpawnFruit("ADMIN_SPAWN_FRUIT 3 90 40 pantalla2");
     }
 
     // -----------------------
@@ -406,7 +419,7 @@ public class GameState {
         
         // Agregar al arreglo
         objetos.add(croc);
-        System.out.println("[SPAWN1] BlueCroc → " + pantalla + " (Liana " + lianaId + ")");
+        //System.out.println("[SPAWN1] BlueCroc → " + pantalla + " (Liana " + lianaId + ")");
     }
     //=====================================
     //========funcion de ha llegado a la meta =======================

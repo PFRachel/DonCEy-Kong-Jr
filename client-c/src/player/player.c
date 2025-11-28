@@ -5,6 +5,10 @@
 //      - Conexión TCP con servidor
 //      - Movimiento y envío de inputs
 //      - Renderizado simple con Raylib
+///Manejo del jugador cliente:
+//      Entrada: inputs del jugador y datos del servidor
+//      Salida: render y mensajes TCP
+//      Restricción: Solo Windows, Raylib y TCP bloqueante
 // ---------------------------------------------------------------
 
 #define WIN32_LEAN_AND_MEAN

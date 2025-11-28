@@ -12,6 +12,16 @@
  *     - Aplicar inputs del jugador al estado del personaje
  *     - Controlar límites de movimiento y colisiones básicas
  *     - Manejar estados especiales (en lianas, saltando, etc.)
+ * 
+ * ---------------------------------------------------------------
+
+ * -------
+     * Entrada:
+     *   - lianas: lista de lianas disponibles
+     *   - plataformas: lista de plataformas
+     *
+     * Salida:
+     *   - Personaje inicializado en posición base
  * ---------------------------------------------------------------
  */
 package domain;

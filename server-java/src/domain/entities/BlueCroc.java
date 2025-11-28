@@ -1,4 +1,20 @@
-
+//Representa un cocodrilo azul dentro del juego. Desciende por una liana,
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Entradas:
+//      - int lianaId: índice de la liana por la que descenderá el cocodrilo.
+//      - float x, y: posición inicial aproximada (se recalcula según la liana).
+//      - List<Liana> lianas: referencia a todas las lianas del nivel.
+//
+// Salidas:
+//      - Actualización de posición mediante mover().
+//      - Aumento de velocidad mediante update().
+//      - Representación JSON mediante toJson().
+//      - Getter/setter de pantalla y liana.
+//
+// Restricciones:
+//      - lianaId debe estar dentro del rango de la lista de lianas.
+//      - La velocidad debe ser positiva para asegurar descenso.
+//      - calcPos() depende de que la liana tenga valores válidos de headY/bottomY.
 package domain.entities;
 
 import java.util.List;

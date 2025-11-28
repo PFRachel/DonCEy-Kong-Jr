@@ -4,6 +4,14 @@
 //      Define todas las estructuras de datos del juego
 //      - Jugador, enemigos, frutas, lianas
 //      - Estado del juego (GameInstance)
+// Entradas:
+//      Datos recibidos del servidor o generados por el juego.
+//
+// Salidas:
+//      Estructuras usadas para lógica, físicas y render.
+//
+// Restricciones:
+//      Deben respetar los límites definidos en constants.h.
 // ---------------------------------------------------------------
 #ifndef STRUCTURES_H
 #define STRUCTURES_H

@@ -12,6 +12,21 @@
  *     - Proporcionar acceso al personaje DKJr asociado
  *     - Modificar atributos del jugador mediante métodos controlados
  * ---------------------------------------------------------------
+ * * Entrada:
+ *     - playerId: identificador del jugador (1 o 2)
+ *     - lianas: lista de lianas para interacción del DKJr
+ *     - plataformas: lista de plataformas para colisiones
+ *
+ * Salida:
+ *     - Objeto Player inicializado y listo para interactuar
+ *     - JSON del estado del jugador mediante toJson()
+ *
+ * Restricciones:
+ *     - playerId debe ser 1 o 2
+ *     - vidas, nivel y score no deben gestionarse externamente
+ *       sin usar los métodos provistos
+ *     - DKJr depende de listas válidas de lianas y plataformas
+ *
  */
 
 package domain;

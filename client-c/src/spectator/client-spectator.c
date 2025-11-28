@@ -7,6 +7,10 @@
 //   - Dibuja al jugador, cocodrilos y frutas de una pantalla
 //   - Usa un MENÚ INICIAL para elegir si observar a Player 1 o Player 2
 // ---------------------------------------------------------------
+//   Cliente espectador TCP.
+//   Entrada: recibe "STATE {...}".
+//   Salida: render de jugador, frutas y cocodrilos.
+//   Restricción: no envía inputs; solo observa una pantalla.
 
 //  Evitar conflictos entre Raylib y Windows
 #define WIN32_LEAN_AND_MEAN

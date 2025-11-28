@@ -1,3 +1,17 @@
+/**
+ * Clase base abstracta para todo objeto del juego.
+ * Usada por la Abstract Factory (cocodrilos, frutas, etc.).
+ *
+ * Entradas:
+ *     - Datos de posición (x, y), id de liana y pantalla destino.
+ *
+ * Salidas:
+ *     - toJson(): serialización mínima para enviar al cliente.
+ *
+ * Restricciones:
+ *     - Todo objeto debe implementar toJson() y getPuntos().
+ *     - Algunos métodos (mover, update) pueden ser ignorados por objetos estáticos.
+ */
 package domain.entities;
 //“todo objeto del juego 
 //debe poder serializarse a JSON”

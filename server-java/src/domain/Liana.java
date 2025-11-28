@@ -1,5 +1,18 @@
 package domain;
-
+ /* Entrada:
+ *     - id: identificador único
+ *     - xPosition: posición X fija
+ *     - headY: punto superior
+ *     - bottomY: punto inferior
+ *
+ * Salida:
+ *     - Liana lista para ser usada por DKJr y enemigos
+ *
+ * Restricciones:
+ *     - Las lianas no se mueven
+ *     - Los métodos solo verifican posición del jugador/objeto
+ * ---------------------------------------------------------------
+ */
 public class Liana {
     private final int id;
     private final float xPosition;

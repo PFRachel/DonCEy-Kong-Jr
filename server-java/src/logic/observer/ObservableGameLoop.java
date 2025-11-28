@@ -1,5 +1,28 @@
 package logic.observer;
+/**
 
+ *     Implementación del patrón Observer aplicada al GameLoop.
+ *     Actúa como un adaptador (Adapter) entre el GameLoop y los
+ *     observadores 
+ * Entradas:
+ *     - GameState state: estado inicial del juego.
+ *     - GameStateObserver obs: observadores que desean recibir
+ *       actualizaciones del estado (mediante addObserver()).
+ *
+ * Salidas:
+ *     - No retorna valores directamente.
+ *     - Notifica a cada observer mediante onStateJson(String json)
+ *       enviando el estado actualizado en formato JSON.
+ *
+ * Restricciones:
+ *     - Los observers deben implementar correctamente la interfaz
+ *       GameStateObserver.
+ *     - El JSON enviado depende del GameLoop y puede incluir gran
+ *       cantidad de datos del juego.
+ *     - La lista de observadores usa CopyOnWriteArrayList para
+ *       evitar problemas de concurrencia.
+ * ---------------------------------------------------------------
+ */
 import logic.GameLoop;
 import logic.GameState;
 

@@ -1,5 +1,22 @@
 package logic.factory;
-
+/* Entrada:
+ *     - tipo: String que indica el tipo de cocodrilo solicitado
+ *     - lianaId: índice de la liana donde aparecerá el objeto
+ *     - altura: altura inicial para frutas
+ *     - puntos: valor en puntos para la fruta
+ *     - lianas: lista completa de lianas disponibles en la escena
+ *
+ * Salida:
+ *     - Instancias de GameObjectFactory especializadas:
+ *          * CrocFactory
+ *          * FruitFactory
+ *
+ * Restricciones:
+ *     - Los parámetros deben ser válidos según lo que exijan
+ *       las fábricas específicas.
+ *     - No se valida la existencia del tipo solicitado aquí;
+ *       cada fábrica es responsable de su validación interna.
+ */
 import domain.Liana;
 import java.util.List;
 
