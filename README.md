@@ -24,4 +24,8 @@
 - **Cliente Jugador (C):** Interfaz gráfica con controles de teclado
 - **Cliente Espectador (C):** Visualización en tiempo real
 
+<<<<<<< HEAD
 **Comunicación:** Sockets entre C y Java para sincronización en red.
+=======
+**Comunicación:** Sockets entre C y Java para sincronización en red.
+>>>>>>> main
