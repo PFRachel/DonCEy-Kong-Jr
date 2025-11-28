@@ -51,23 +51,7 @@ public class GameServer {
 
             while (true) {
                 String line = sc.nextLine().trim();
-                try {
-                    if (line.equalsIgnoreCase("EXIT")) {
-                        System.out.println("[ADMIN] Saliendo servidor (no recomendado en prod).");
-                        System.exit(0);
-                    } else if (line.startsWith("ADMIN_SPAWN_CROC")) {
-                        procesarSpawnCroc(line);
-                    } else if (line.startsWith("ADMIN_SPAWN_FRUIT")) {
-                        procesarSpawnFruit(line);
-                    } else if (line.startsWith("ADMIN_DELETE_FRUIT")) {
-                        procesarDeleteFruit(line);
-                    } else {
-                        System.out.println("[ADMIN] Comando no reconocido: " + line);
-                    }
-                } catch (Exception e) {
-                    System.out.println("[ADMIN] Error procesando comando: " + e.getMessage());
-                    e.printStackTrace(System.out);
-                }
+                procesarComandoAdmin(line);
             }
         }, "AdminConsole").start();
 
@@ -119,83 +103,95 @@ public class GameServer {
     public void broadcast(String line) {
         for (ClientHandler c : clients) c.send(line);
     }
-     // --------- Métodos auxiliares para procesar comandos admin ----------
-    private void procesarSpawnCroc(String line) {
-        // Formato esperado: ADMIN_SPAWN_CROC <color> <lianaIndex> <pantalla>
-        String[] p = line.split("\\s+");
-        if (p.length != 4) {
-            System.out.println("[ADMIN] Uso: ADMIN_SPAWN_CROC <color> <lianaIndex> <pantalla>");
-            return;
-        }
-        String color = p[1];
-        String lianaStr = p[2];
-        String pantalla = p[3];
+     // ======================================
+    // MANEJO DE COMANDOS ADMIN
+    // ======================================
+    private void procesarComandoAdmin(String cmd) {
 
-        int lianaIdx;
-        try {
-            lianaIdx = Integer.parseInt(lianaStr);
-        } catch (NumberFormatException ex) {
-            System.out.println("[ADMIN] lianaIndex debe ser un entero. Recibido: " + lianaStr);
-            return;
-        }
+        String[] p = cmd.split("\\s+");
+        if (p.length == 0) return;
 
-        // Construimos el mensaje tal como lo espera GameState.adminSpawnCroc
-        String msg = String.format("ADMIN_SPAWN_CROC %s %d %s", color, lianaIdx, pantalla);
-        state.adminSpawnCroc(msg);
-        // Notificar a clientes inmediatamente
-        broadcast("STATE " + state.toJson() + "\n");
-        System.out.println("[ADMIN] Ejecutado: " + msg);
+        switch (p[0]) {
+
+            // ---------------------------------------------
+            case "ADMIN_SPAWN_CROC":
+                if (p.length != 4) {
+                    System.out.println("Uso: ADMIN_SPAWN_CROC <color> <liana> <pantalla>");
+                    return;
+                }
+
+                String color = p[1];
+                String lianaStr = p[2];
+                String pantalla = p[3];
+
+                // validar número
+                try {
+                    Integer.parseInt(lianaStr);
+                } catch (NumberFormatException ex) {
+                    System.out.println("[ADMIN] liana debe ser un entero.");
+                    return;
+                }
+
+                String msgCroc = String.format("ADMIN_SPAWN_CROC %s %s %s", color, lianaStr, pantalla);
+                state.adminSpawnCroc(msgCroc);
+
+                broadcast("STATE " + state.toJson() + "\n");
+                System.out.println("[ADMIN] Ejecutado: " + msgCroc);
+                break;
+
+            // ---------------------------------------------
+            case "ADMIN_SPAWN_FRUIT":
+                if (p.length != 5) {
+                    System.out.println("Uso: ADMIN_SPAWN_FRUIT <liana> <altura> <puntos> <pantalla>");
+                    return;
+                }
+
+                String lStr = p[1];
+                String altura = p[2];
+                String puntos = p[3];
+                String pant = p[4];
+
+                try {
+                    Integer.parseInt(lStr);
+                    Float.parseFloat(altura);
+                    Integer.parseInt(puntos);
+                } catch (NumberFormatException ex) {
+                    System.out.println("[ADMIN] lianaIndex, altura o puntos inválidos.");
+                    return;
+                }
+
+                String msgFruit = String.format("ADMIN_SPAWN_FRUIT %s %s %s %s", lStr, altura, puntos, pant);
+                state.adminSpawnFruit(msgFruit);
+
+                broadcast("STATE " + state.toJson() + "\n");
+                System.out.println("[ADMIN] Ejecutado: " + msgFruit);
+                break;
+
+            // ---------------------------------------------
+            case "ADMIN_DELETE_FRUIT":
+                if (p.length != 4) {
+                    System.out.println("Uso: ADMIN_DELETE_FRUIT <liana> <altura> <pantalla>");
+                    return;
+                }
+
+                try {
+                    Integer.parseInt(p[1]);
+                    Float.parseFloat(p[2]);
+                } catch (NumberFormatException ex) {
+                    System.out.println("[ADMIN] formato inválido.");
+                    return;
+                }
+
+                String msgDel = String.format("ADMIN_DELETE_FRUIT %s %s %s", p[1], p[2], p[3]);
+                state.adminDeleteFruit(msgDel);
+
+                broadcast("STATE " + state.toJson() + "\n");
+                System.out.println("[ADMIN] Ejecutado: " + msgDel);
+                break;
+
+            default:
+                System.out.println("[ADMIN] Comando no reconocido.");
+        }
     }
-
-    private void procesarSpawnFruit(String line) {
-        // Formato esperado: ADMIN_SPAWN_FRUIT <lianaIndex> <altura> <puntos> <pantalla>
-        String[] p = line.split("\\s+");
-        if (p.length != 5) {
-            System.out.println("[ADMIN] Uso: ADMIN_SPAWN_FRUIT <lianaIndex> <altura> <puntos> <pantalla>");
-            return;
-        }
-        String lianaStr = p[1];
-        String alturaStr = p[2];
-        String puntosStr = p[3];
-        String pantalla = p[4];
-
-        try {
-            Integer.parseInt(lianaStr);
-            Float.parseFloat(alturaStr);
-            Integer.parseInt(puntosStr);
-        } catch (NumberFormatException ex) {
-            System.out.println("[ADMIN] lianaIndex/altura/puntos con formato inválido.");
-            return;
-        }
-
-        String msg = String.format("ADMIN_SPAWN_FRUIT %s %s %s %s", lianaStr, alturaStr, puntosStr, pantalla);
-        state.adminSpawnFruit(msg);
-        broadcast("STATE " + state.toJson() + "\n");
-        System.out.println("[ADMIN] Ejecutado: " + msg);
-    }
-
-    private void procesarDeleteFruit(String line) {
-        // Formato esperado: ADMIN_DELETE_FRUIT <lianaIndex> <altura> <pantalla>
-        String[] p = line.split("\\s+");
-        if (p.length != 4) {
-            System.out.println("[ADMIN] Uso: ADMIN_DELETE_FRUIT <lianaIndex> <altura> <pantalla>");
-            return;
-        }
-        String lianaStr = p[1];
-        String alturaStr = p[2];
-        String pantalla = p[3];
-
-        try {
-            Integer.parseInt(lianaStr);
-            Float.parseFloat(alturaStr);
-        } catch (NumberFormatException ex) {
-            System.out.println("[ADMIN] lianaIndex/altura con formato inválido.");
-            return;
-        }
-
-        String msg = String.format("ADMIN_DELETE_FRUIT %s %s %s", lianaStr, alturaStr, pantalla);
-        state.adminDeleteFruit(msg);
-        broadcast("STATE " + state.toJson() + "\n");
-        System.out.println("[ADMIN] Ejecutado: " + msg);
-    }
+    
 }
